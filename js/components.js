@@ -106,7 +106,7 @@ function createButton(label, { className = 'btn btn-primary', type = 'button', o
     return button;
 }
 
-function createInputField({ id, name, label, type = 'text', value = '', options, min, step, required = false, autofocus = false }) {
+function createInputField({ id, name, label, type = 'text', value = '', options, placeholder, min, step, maxLength, required = false, autofocus = false }) {
     const field = document.createElement('div');
     field.className = 'mb-3';
 
@@ -120,6 +120,13 @@ function createInputField({ id, name, label, type = 'text', value = '', options,
     input.id = id;
     input.name = name;
     if (options) {
+        if (placeholder) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = placeholder;
+            option.disabled = true;
+            input.append(option);
+        }
         for (const [optionValue, optionLabel] of Object.entries(options)) {
             const option = document.createElement('option');
             option.value = optionValue;
@@ -130,6 +137,7 @@ function createInputField({ id, name, label, type = 'text', value = '', options,
         input.type = type;
         if (min !== undefined) input.min = min;
         if (step !== undefined) input.step = step;
+        if (maxLength !== undefined) input.maxLength = maxLength;
     }
     input.value = value ?? '';
     input.required = required;
@@ -177,7 +185,7 @@ let nextDialogId = 0;
 let activeDialog = null;
 
 function showActionDialog({ title, message, fields = [], acceptLabel = 'Guardar',
-    acceptClass = 'btn btn-primary', canCancel = true }) {
+    acceptClass = 'btn btn-primary', canCancel = true, onSubmit }) {
     if (activeDialog) return Promise.resolve(null);
 
     const form = document.createElement('form');
@@ -191,6 +199,12 @@ function showActionDialog({ title, message, fields = [], acceptLabel = 'Guardar'
     for (const field of fields) {
         form.append(createInputField({ ...field, id: `${form.id}-${field.name}` }));
     }
+
+    const error = document.createElement('p');
+    error.className = 'alert alert-danger mb-0';
+    error.setAttribute('role', 'alert');
+    error.hidden = true;
+    if (onSubmit) form.append(error);
 
     const footer = document.createDocumentFragment();
     const cancel = canCancel ? createButton('Cancelar', { className: 'btn btn-secondary' }) : null;
@@ -211,6 +225,12 @@ function showActionDialog({ title, message, fields = [], acceptLabel = 'Guardar'
     return new Promise(resolve => {
         let result = null;
         let ready = false;
+        let submitting = false;
+        const controls = [...form.elements, modal.querySelector('.btn-close')];
+        if (cancel) controls.push(cancel);
+        modal.addEventListener('hide.bs.modal', event => {
+            if (submitting && !dialog.cancelled) event.preventDefault();
+        });
         modal.addEventListener('shown.bs.modal', () => {
             ready = true;
             if (dialog.cancelled) {
@@ -219,10 +239,32 @@ function showActionDialog({ title, message, fields = [], acceptLabel = 'Guardar'
             }
             (form.querySelector('input, select') || cancel || submit).focus();
         }, { once: true });
-        form.addEventListener('submit', event => {
+        form.addEventListener('submit', async event => {
             event.preventDefault();
-            if (!ready || dialog.cancelled) return;
-            result = Object.fromEntries(new FormData(form));
+            if (!ready || submitting || dialog.cancelled) return;
+            const values = Object.fromEntries(new FormData(form));
+            if (onSubmit) {
+                submitting = true;
+                error.hidden = true;
+                form.setAttribute('aria-busy', 'true');
+                controls.forEach(control => { control.disabled = true; });
+                try {
+                    await onSubmit(values);
+                } catch (err) {
+                    if (!dialog.cancelled) {
+                        error.textContent = err.message || 'No se pudo guardar.';
+                        error.hidden = false;
+                    }
+                    return;
+                } finally {
+                    submitting = false;
+                    form.removeAttribute('aria-busy');
+                    controls.forEach(control => { control.disabled = false; });
+                    if (!error.hidden) (form.querySelector('input, select') || submit).focus();
+                }
+            }
+            if (dialog.cancelled) return;
+            result = values;
             instance.hide();
         });
         modal.addEventListener('hidden.bs.modal', () => {
