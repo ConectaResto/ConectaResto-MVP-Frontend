@@ -147,8 +147,7 @@ class PublicView {
         this.cartBtn = this.container.querySelector('#publicCartBtn');
         this.cartCountEl = this.container.querySelector('#publicCartCount');
         this.cartBtn.addEventListener('click', () => {
-            this.cartModalInstance = new bootstrap.Modal(document.getElementById('publicCartModal'));
-            this.cartModalInstance.show();
+            this.cartModalInstance = openModal(this.container.querySelector('#publicCartModal'));
         });
 
         // Checkout button en el modal
