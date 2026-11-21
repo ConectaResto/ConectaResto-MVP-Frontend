@@ -184,7 +184,7 @@ function openModal(modal) {
 let nextDialogId = 0;
 let activeDialog = null;
 
-function showActionDialog({ title, message, fields = [], acceptLabel = 'Guardar',
+function showActionDialog({ title, message, fields = [], renderContent, acceptLabel = 'Guardar',
     acceptClass = 'btn btn-primary', canCancel = true, onSubmit }) {
     if (activeDialog) return Promise.resolve(null);
 
@@ -204,7 +204,6 @@ function showActionDialog({ title, message, fields = [], acceptLabel = 'Guardar'
     error.className = 'alert alert-danger mb-0';
     error.setAttribute('role', 'alert');
     error.hidden = true;
-    if (onSubmit) form.append(error);
 
     const footer = document.createDocumentFragment();
     const cancel = canCancel ? createButton('Cancelar', { className: 'btn btn-secondary' }) : null;
@@ -214,6 +213,8 @@ function showActionDialog({ title, message, fields = [], acceptLabel = 'Guardar'
     }
     const submit = createButton(acceptLabel, { type: 'submit', className: acceptClass });
     submit.setAttribute('form', form.id);
+    if (renderContent) form.append(renderContent(submit));
+    if (onSubmit) form.append(error);
     footer.append(submit);
     const modal = createModal({ title, body: form, footer });
     const trigger = document.activeElement;
@@ -241,7 +242,7 @@ function showActionDialog({ title, message, fields = [], acceptLabel = 'Guardar'
         }, { once: true });
         form.addEventListener('submit', async event => {
             event.preventDefault();
-            if (!ready || submitting || dialog.cancelled) return;
+            if (!ready || submitting || dialog.cancelled || result !== null) return;
             const values = Object.fromEntries(new FormData(form));
             if (onSubmit) {
                 submitting = true;
