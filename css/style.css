@@ -3,20 +3,17 @@ body {
     padding-top: 70px;
 }
 
-#flashContainer {
-    position: fixed;
+#toastContainer {
     top: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1060;
-    width: 100%;
-    max-width: 600px;
-    pointer-events: none;
+    max-width: 100vw;
 }
 
-.flash {
-    pointer-events: auto;
-    margin-bottom: 1rem;
+#toastContainer .toast {
+    width: min(350px, calc(100vw - 2rem));
+}
+
+.dialog-message {
+    white-space: pre-line;
 }
 
 .view-card {
@@ -67,6 +64,18 @@ body {
 
 #navPublic, #navAuthenticated {
     display: none;
+}
+
+.navbar-conectaresto {
+    --bs-navbar-color: rgba(255, 255, 255, 0.8);
+    --bs-navbar-hover-color: #fff;
+    --bs-navbar-active-color: #fff;
+}
+
+#navRoleSections .nav-link.active {
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
 }
 
 /* Botón flotante del carrito en vista pública */
