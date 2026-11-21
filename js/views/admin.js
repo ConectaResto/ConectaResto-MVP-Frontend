@@ -39,7 +39,8 @@ class AdminView {
 
     async loadSection(section) {
         const container = this.container.querySelector(`#admin${section.charAt(0).toUpperCase() + section.slice(1)}`);
-        container.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div></div>';
+        if (!container) return;
+        if (!container.hasChildNodes()) loading(container);
 
         try {
             if (section === 'mesas') await this.loadMesas(container);
@@ -47,95 +48,140 @@ class AdminView {
             if (section === 'productos') await this.loadProductos(container);
             if (section === 'usuarios') await this.loadUsuarios(container);
         } catch (err) {
+            if (!container.querySelector('table')) container.textContent = 'No se pudo cargar la sección.';
             flash(err.message, 'danger');
         }
+    }
+
+    renderSection(container, { title, bodyId, headers, items, cells, add, actions }) {
+        const header = document.createElement('div');
+        header.className = 'd-flex flex-wrap align-items-center justify-content-between gap-2 mb-3';
+        const heading = document.createElement('h5');
+        heading.className = 'mb-0';
+        heading.textContent = title;
+        header.append(heading, createButton('Agregar', { onClick: add }));
+
+        const tableContainer = document.createElement('div');
+        tableContainer.className = 'table-responsive';
+        const table = renderTable(tableContainer, headers, items.map(cells),
+            (row, index) => this.renderActions(row[0], actions(items[index])));
+        const body = table.tBodies[0];
+        body.id = bodyId;
+        if (!items.length) {
+            const cell = body.insertRow().insertCell();
+            cell.colSpan = headers.length;
+            cell.className = 'text-muted text-center';
+            cell.textContent = 'No hay registros.';
+        }
+        this.disposeActions(container);
+        container.replaceChildren(header, tableContainer);
+    }
+
+    renderActions(recordLabel, actions) {
+        const group = document.createElement('div');
+        group.className = 'dropdown';
+        const toggle = createButton('Acciones', { className: 'btn btn-sm btn-outline-secondary dropdown-toggle' });
+        toggle.setAttribute('data-bs-toggle', 'dropdown');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', `Acciones de ${recordLabel}`);
+
+        const menu = document.createElement('ul');
+        menu.className = 'dropdown-menu dropdown-menu-end';
+        group.append(toggle, menu);
+
+        // Position against the viewport so the responsive table cannot clip the menu.
+        const dropdown = new bootstrap.Dropdown(toggle, {
+            boundary: document.body,
+            popperConfig: defaults => ({ ...defaults, strategy: 'fixed' })
+        });
+        for (const [label, variant, onClick] of actions) {
+            const item = document.createElement('li');
+            item.append(createButton(label, {
+                className: variant === 'danger' ? 'dropdown-item text-danger' : 'dropdown-item',
+                onClick: () => {
+                    dropdown.hide();
+                    toggle.focus();
+                    onClick();
+                }
+            }));
+            menu.append(item);
+        }
+        return group;
+    }
+
+    disposeActions(container) {
+        for (const toggle of container.querySelectorAll('button[data-bs-toggle="dropdown"]')) {
+            bootstrap.Dropdown.getInstance(toggle)?.dispose();
+        }
+    }
+
+    showDetails(title, fields) {
+        return showActionDialog({
+            title,
+            message: Object.entries(fields).map(([label, value]) => `${label}: ${value ?? '—'}`).join('\n'),
+            acceptLabel: 'Cerrar',
+            canCancel: false
+        });
+    }
+
+    badge(label, variant) {
+        const badge = document.createElement('span');
+        badge.className = `badge bg-${variant}`;
+        badge.textContent = label;
+        return badge;
+    }
+
+    async saveRecord({ section, title, fields, url, id, payload, success }) {
+        const values = await showActionDialog({
+            title, fields,
+            onSubmit: values => id === undefined
+                ? api.post(url, payload(values))
+                : api.patch(`${url}/${id}`, payload(values))
+        });
+        if (!values) return;
+        flash(success, 'success');
+        await this.loadSection(section);
     }
 
     async loadMesas(container) {
-        const data = await api.get('/admin/mesas');
-        const mesas = data.data || [];
-
-        container.innerHTML = `
-            <h5>Mesas y QR</h5>
-            <div class="row g-3 mb-3">
-                <div class="col-md-4">
-                    <input type="number" id="adminMesaNumero" class="form-control" placeholder="N&uacute;mero de mesa" min="1">
-                </div>
-                <div class="col-md-4">
-                    <select id="adminMesaEstado" class="form-select">
-                        <option value="DISPONIBLE">Disponible</option>
-                        <option value="OCUPADA">Ocupada</option>
-                        <option value="CERRADA">Cerrada</option>
-                    </select>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button id="adminMesaCreate" class="btn btn-primary w-100">Crear mesa</button>
-                </div>
-            </div>
-            <div class="table-responsive" id="adminMesasTable"></div>
-        `;
-
-        const rows = mesas.map(mesa => {
-            const badge = document.createElement('span');
-            badge.className = 'badge bg-' + badgeColor(mesa.estado);
-            badge.textContent = estadoLegible(mesa.estado);
-            const qr = createButton('Ver QR', {
-                className: 'btn btn-sm btn-outline-primary',
-                onClick: () => this.verQr(mesa.id)
-            });
-            return ['Mesa ' + mesa.numero, badge, qr];
-        });
-        const table = renderTable(container.querySelector('#adminMesasTable'),
-            ['Número', 'Estado', 'QR', 'Acciones'], rows, (_, index) => {
-                const mesa = mesas[index];
-                return createButton('Editar', {
-                    className: 'btn btn-sm btn-outline-secondary',
-                    onClick: () => this.editMesa(mesa.id, mesa.numero, mesa.estado)
-                });
-            });
-        table.tBodies[0].id = 'adminMesasBody';
-
-        this.container.querySelector('#adminMesaCreate').addEventListener('click', () => this.crearMesa());
-    }
-
-    async crearMesa() {
-        const numeroInput = this.container.querySelector('#adminMesaNumero');
-        const estadoSelect = this.container.querySelector('#adminMesaEstado');
-        const numero = parseInt(numeroInput.value);
-        const estado = estadoSelect.value;
-
-        if (!numero) {
-            flash('Ingrese un número válido.', 'danger');
-            return;
-        }
-
-        try {
-            await api.post('/admin/mesas', { numero, estado });
-            flash('Mesa creada.', 'success');
-            numeroInput.value = '';
-            this.loadSection('mesas');
-        } catch (err) {
-            flash(err.message, 'danger');
-        }
-    }
-
-    async editMesa(id, numero, estado) {
-        const values = await showActionDialog({
-            title: 'Editar mesa',
-            fields: [
-                { name: 'numero', label: 'Número de mesa', type: 'number', value: numero, min: 1, required: true },
-                { name: 'estado', label: 'Estado', value: estado, options: ESTADOS_MESA, required: true }
+        const { data: mesas = [] } = await api.get('/admin/mesas');
+        this.renderSection(container, {
+            title: 'Mesas y QR',
+            bodyId: 'adminMesasBody',
+            headers: ['Número', 'Estado', 'QR', 'Acciones'],
+            items: mesas,
+            cells: mesa => [
+                `Mesa ${mesa.numero}`,
+                this.badge(estadoLegible(mesa.estado), badgeColor(mesa.estado)),
+                createButton('Ver QR', {
+                    className: 'btn btn-sm btn-outline-primary',
+                    onClick: () => this.verQr(mesa.id)
+                })
+            ],
+            add: () => this.saveMesa(),
+            actions: mesa => [
+                ['Ver detalles', 'secondary', () => this.showDetails('Detalles de mesa', {
+                    'Número': mesa.numero,
+                    Estado: estadoLegible(mesa.estado)
+                })],
+                ['Editar', 'secondary', () => this.saveMesa(mesa)]
             ]
         });
-        if (!values) return;
+    }
 
-        try {
-            await api.patch(`/admin/mesas/${id}`, { numero: parseInt(values.numero, 10), estado: values.estado });
-            flash('Mesa actualizada.', 'success');
-            this.loadSection('mesas');
-        } catch (err) {
-            flash(err.message, 'danger');
-        }
+    saveMesa(mesa) {
+        return this.saveRecord({
+            section: 'mesas',
+            title: mesa ? 'Editar mesa' : 'Agregar mesa',
+            fields: [
+                { name: 'numero', label: 'Número de mesa', type: 'number', value: mesa?.numero, min: 1, required: true },
+                { name: 'estado', label: 'Estado', value: mesa?.estado ?? 'DISPONIBLE', options: ESTADOS_MESA, required: true }
+            ],
+            url: '/admin/mesas',
+            id: mesa?.id,
+            payload: values => ({ numero: parseInt(values.numero, 10), estado: values.estado }),
+            success: mesa ? 'Mesa actualizada.' : 'Mesa creada.'
+        });
     }
 
     async verQr(mesaId) {
@@ -167,95 +213,52 @@ class AdminView {
     }
 
     async loadCategorias(container) {
-        const data = await api.get('/categories?include_inactive=true');
-        const cats = data.data || [];
-
-        container.innerHTML = `
-            <h5>Categor&iacute;as</h5>
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                    <input type="text" id="adminCatName" class="form-control" placeholder="Nombre" maxlength="100">
-                </div>
-                <div class="col-md-4">
-                    <input type="text" id="adminCatDesc" class="form-control" placeholder="Descripci&oacute;n" maxlength="500">
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button id="adminCatCreate" class="btn btn-primary w-100">Crear</button>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
-                    <thead><tr><th>Nombre</th><th>Descripci&oacute;n</th><th>Acciones</th></tr></thead>
-                    <tbody id="adminCategoriasBody"></tbody>
-                </table>
-            </div>
-        `;
-
-        const tbody = container.querySelector('#adminCategoriasBody');
-        cats.forEach(c => {
-            const tr = document.createElement('tr');
-
-            const tdName = document.createElement('td');
-            tdName.textContent = c.name;
-            tr.appendChild(tdName);
-
-            const tdDesc = document.createElement('td');
-            tdDesc.textContent = c.description || '-';
-            tr.appendChild(tdDesc);
-
-            const tdAcciones = document.createElement('td');
-            const btnEdit = document.createElement('button');
-            btnEdit.type = 'button';
-            btnEdit.className = 'btn btn-sm btn-outline-secondary';
-            btnEdit.textContent = 'Editar';
-            btnEdit.addEventListener('click', () => this.editCategoria(c.id, c.name, c.description || ''));
-            tdAcciones.appendChild(btnEdit);
-
-            const btnDel = document.createElement('button');
-            btnDel.type = 'button';
-            btnDel.className = 'btn btn-sm btn-outline-danger';
-            btnDel.textContent = 'Desactivar';
-            btnDel.addEventListener('click', () => this.deleteCategoria(c.id));
-            tdAcciones.appendChild(btnDel);
-            tr.appendChild(tdAcciones);
-
-            tbody.appendChild(tr);
-        });
-
-        this.container.querySelector('#adminCatCreate').addEventListener('click', () => this.crearCategoria());
-    }
-
-    async crearCategoria() {
-        const name = this.container.querySelector('#adminCatName').value.trim();
-        const desc = this.container.querySelector('#adminCatDesc').value.trim();
-        if (!name) { flash('Nombre requerido.', 'danger'); return; }
-        try {
-            await api.post('/categories', { name, description: desc });
-            flash('Categoría creada.', 'success');
-            this.container.querySelector('#adminCatName').value = '';
-            this.container.querySelector('#adminCatDesc').value = '';
-            this.loadSection('categorias');
-        } catch (err) { flash(err.message, 'danger'); }
-    }
-
-    async editCategoria(id, name, desc) {
-        const values = await showActionDialog({
-            title: 'Editar categoría',
-            fields: [
-                { name: 'name', label: 'Nombre', value: name, required: true },
-                { name: 'description', label: 'Descripción', value: desc }
+        const { data: categorias = [] } = await api.get('/categories?include_inactive=true');
+        this.renderSection(container, {
+            title: 'Categorías',
+            bodyId: 'adminCategoriasBody',
+            headers: ['Nombre', 'Descripción', 'Estado', 'Acciones'],
+            items: categorias,
+            cells: categoria => [
+                categoria.name, categoria.description || '-',
+                this.badge(categoria.is_active ? 'Activa' : 'Inactiva', categoria.is_active ? 'success' : 'danger')
+            ],
+            add: () => this.saveCategoria(),
+            actions: categoria => [
+                ['Ver detalles', 'secondary', () => this.showDetails('Detalles de categoría', {
+                    Nombre: categoria.name,
+                    'Descripción': categoria.description || '—',
+                    Estado: categoria.is_active ? 'Activa' : 'Inactiva'
+                })],
+                ...(categoria.is_active ? [
+                    ['Editar', 'secondary', () => this.saveCategoria(categoria)],
+                    ['Desactivar', 'danger', () => this.desactivarCategoria(categoria.id)]
+                ] : [
+                    ['Reactivar', 'success', () => this.reactivarCategoria(categoria.id)]
+                ])
             ]
         });
-        if (!values) return;
-
-        try {
-            await api.patch(`/categories/${id}`, values);
-            flash('Categoría actualizada.', 'success');
-            this.loadSection('categorias');
-        } catch (err) { flash(err.message, 'danger'); }
     }
 
-    async deleteCategoria(id) {
+    saveCategoria(categoria) {
+        return this.saveRecord({
+            section: 'categorias',
+            title: categoria ? 'Editar categoría' : 'Agregar categoría',
+            fields: [
+                { name: 'name', label: 'Nombre', value: categoria?.name, maxLength: 100, required: true },
+                { name: 'description', label: 'Descripción', value: categoria?.description, maxLength: 500 }
+            ],
+            url: '/categories',
+            id: categoria?.id,
+            payload: values => {
+                if (!values.name.trim()) throw new Error('Nombre requerido.');
+                return categoria ? values : { name: values.name.trim(), description: values.description.trim() };
+            },
+            success: categoria ? 'Categoría actualizada.' : 'Categoría creada.'
+        });
+    }
+
+    async desactivarCategoria(id) {
         if (!await confirmAction({
             title: 'Desactivar categoría', message: '¿Desactivar esta categoría?', acceptLabel: 'Desactivar', danger: true
         })) return;
@@ -266,141 +269,87 @@ class AdminView {
         } catch (err) { flash(err.message, 'danger'); }
     }
 
+    async reactivarCategoria(id) {
+        try {
+            await api.patch(`/categories/${id}`, { is_active: true });
+            flash('Categoría reactivada.', 'success');
+            this.loadSection('categorias');
+        } catch (err) { flash(err.message, 'danger'); }
+    }
+
     async loadProductos(container) {
-        const [prodData, catData] = await Promise.all([
+        const [products, categories] = await Promise.all([
             api.get('/admin/products?include_inactive=true'),
             api.get('/categories?include_inactive=true')
         ]);
-        const productos = prodData.data || [];
-        const categorias = catData.data || [];
-
-        container.innerHTML = `
-            <h5>Productos</h5>
-            <div class="row g-3 mb-3">
-                <div class="col-md-3">
-                    <input type="text" id="adminProdName" class="form-control" placeholder="Nombre" maxlength="100">
-                </div>
-                <div class="col-md-3">
-                    <input type="text" id="adminProdDesc" class="form-control" placeholder="Descripci&oacute;n" maxlength="500">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" id="adminProdPrice" class="form-control" placeholder="Precio" min="0" step="0.01">
-                </div>
-                <div class="col-md-2">
-                    <select id="adminProdCat" class="form-select">
-                        <option value="">Categor&iacute;a</select>
-                        ${categorias.filter(c => c.is_active).map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button id="adminProdCreate" class="btn btn-primary w-100">Crear</button>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
-                    <thead><tr><th>Nombre</th><th>Categor&iacute;a</th><th>Precio</th><th>Disponible</th><th>Activo</th><th>Acciones</th></tr></thead>
-                    <tbody id="adminProductosBody"></tbody>
-                </table>
-            </div>
-        `;
-
-        const tbody = container.querySelector('#adminProductosBody');
-        productos.forEach(p => {
-            const cat = categorias.find(c => c.id === p.categoria_id);
-            const tr = document.createElement('tr');
-
-            const tdName = document.createElement('td');
-            tdName.textContent = p.name;
-            tr.appendChild(tdName);
-
-            const tdCat = document.createElement('td');
-            tdCat.textContent = cat ? cat.name : '#' + p.categoria_id;
-            tr.appendChild(tdCat);
-
-            const tdPrice = document.createElement('td');
-            tdPrice.textContent = p.price;
-            tr.appendChild(tdPrice);
-
-            const tdAvail = document.createElement('td');
-            const badgeAvail = document.createElement('span');
-            badgeAvail.className = 'badge bg-' + (p.is_available ? 'success' : 'secondary');
-            badgeAvail.textContent = p.is_available ? 'S&iacute;' : 'No';
-            tdAvail.appendChild(badgeAvail);
-            tr.appendChild(tdAvail);
-
-            const tdActive = document.createElement('td');
-            const badgeActive = document.createElement('span');
-            badgeActive.className = 'badge bg-' + (p.is_active ? 'success' : 'danger');
-            badgeActive.textContent = p.is_active ? 'S&iacute;' : 'No';
-            tdActive.appendChild(badgeActive);
-            tr.appendChild(tdActive);
-
-            const tdAcciones = document.createElement('td');
-            const btnEdit = document.createElement('button');
-            btnEdit.type = 'button';
-            btnEdit.className = 'btn btn-sm btn-outline-secondary';
-            btnEdit.textContent = 'Editar';
-            btnEdit.addEventListener('click', () => this.editProducto(p.id, p.name, p.description || '', p.price, p.categoria_id, p.is_available));
-            tdAcciones.appendChild(btnEdit);
-
-            if (p.is_active) {
-                const btnDel = document.createElement('button');
-                btnDel.type = 'button';
-                btnDel.className = 'btn btn-sm btn-outline-danger';
-                btnDel.textContent = 'Desactivar';
-                btnDel.addEventListener('click', () => this.deleteProducto(p.id));
-                tdAcciones.appendChild(btnDel);
-            } else {
-                const btnReact = document.createElement('button');
-                btnReact.type = 'button';
-                btnReact.className = 'btn btn-sm btn-outline-success';
-                btnReact.textContent = 'Reactivar';
-                btnReact.addEventListener('click', () => this.reactivarProducto(p.id));
-                tdAcciones.appendChild(btnReact);
-            }
-            tr.appendChild(tdAcciones);
-
-            tbody.appendChild(tr);
-        });
-
-        this.container.querySelector('#adminProdCreate').addEventListener('click', () => this.crearProducto());
-    }
-
-    async crearProducto() {
-        const data = {
-            name: this.container.querySelector('#adminProdName').value.trim(),
-            description: this.container.querySelector('#adminProdDesc').value.trim(),
-            price: this.container.querySelector('#adminProdPrice').value,
-            categoria_id: parseInt(this.container.querySelector('#adminProdCat').value),
-            is_available: true
-        };
-        if (!data.name || !data.categoria_id) { flash('Nombre y categoría requeridos.', 'danger'); return; }
-        try {
-            await api.post('/products', data);
-            flash('Producto creado.', 'success');
-            this.loadSection('productos');
-        } catch (err) { flash(err.message, 'danger'); }
-    }
-
-    async editProducto(id, name, desc, price, catId, isAvailable) {
-        const values = await showActionDialog({
-            title: 'Editar producto',
-            fields: [
-                { name: 'name', label: 'Nombre', value: name, required: true },
-                { name: 'description', label: 'Descripción', value: desc },
-                { name: 'price', label: 'Precio', type: 'number', value: price, step: 'any', required: true }
+        const categorias = categories.data || [];
+        const nombres = new Map(categorias.map(categoria => [categoria.id, categoria.name]));
+        this.renderSection(container, {
+            title: 'Productos',
+            bodyId: 'adminProductosBody',
+            headers: ['Nombre', 'Categoría', 'Precio', 'Disponible', 'Activo', 'Acciones'],
+            items: products.data || [],
+            cells: producto => [
+                producto.name, nombres.get(producto.categoria_id) ?? `#${producto.categoria_id}`, producto.price,
+                this.badge(producto.is_available ? 'Sí' : 'No', producto.is_available ? 'success' : 'secondary'),
+                this.badge(producto.is_active ? 'Sí' : 'No', producto.is_active ? 'success' : 'danger')
+            ],
+            add: () => this.saveProducto(null, categorias),
+            actions: producto => [
+                ['Ver detalles', 'secondary', () => this.showDetails('Detalles de producto', {
+                    Nombre: producto.name,
+                    'Descripción': producto.description || '—',
+                    'Categoría': nombres.get(producto.categoria_id) ?? `#${producto.categoria_id}`,
+                    Precio: producto.price,
+                    Disponible: producto.is_available ? 'Sí' : 'No',
+                    Estado: producto.is_active ? 'Activo' : 'Inactivo'
+                })],
+                ...(producto.is_active ? [
+                    ['Editar', 'secondary', () => this.saveProducto(producto, categorias)],
+                    ['Desactivar', 'danger', () => this.desactivarProducto(producto.id)]
+                ] : [
+                    ['Reactivar', 'success', () => this.reactivarProducto(producto.id)]
+                ])
             ]
         });
-        if (!values) return;
-
-        try {
-            await api.patch(`/products/${id}`, values);
-            flash('Producto actualizado.', 'success');
-            this.loadSection('productos');
-        } catch (err) { flash(err.message, 'danger'); }
     }
 
-    async deleteProducto(id) {
+    saveProducto(producto, categorias) {
+        const fields = [
+            { name: 'name', label: 'Nombre', value: producto?.name, maxLength: 100, required: true },
+            { name: 'description', label: 'Descripción', value: producto?.description, maxLength: 500 },
+            { name: 'price', label: 'Precio', type: 'number', value: producto?.price, min: 0,
+                step: producto ? 'any' : '0.01', required: true }
+        ];
+        if (!producto) {
+            const options = Object.fromEntries(categorias.filter(categoria => categoria.is_active)
+                .map(categoria => [categoria.id, categoria.name]));
+            if (!Object.keys(options).length) {
+                flash('Cree una categoría activa antes de agregar un producto.', 'warning');
+                return;
+            }
+            fields.push({
+                name: 'categoria_id', label: 'Categoría', options, placeholder: 'Seleccione una categoría', required: true
+            });
+        }
+        return this.saveRecord({
+            section: 'productos',
+            title: producto ? 'Editar producto' : 'Agregar producto',
+            fields,
+            url: '/products',
+            id: producto?.id,
+            payload: values => {
+                if (!values.name.trim()) throw new Error('Nombre requerido.');
+                return producto ? values : {
+                    name: values.name.trim(), description: values.description.trim(), price: values.price,
+                    categoria_id: parseInt(values.categoria_id, 10), is_available: true
+                };
+            },
+            success: producto ? 'Producto actualizado.' : 'Producto creado.'
+        });
+    }
+
+    async desactivarProducto(id) {
         if (!await confirmAction({
             title: 'Desactivar producto', message: '¿Desactivar este producto?', acceptLabel: 'Desactivar', danger: true
         })) return;
@@ -420,134 +369,56 @@ class AdminView {
     }
 
     async loadUsuarios(container) {
-        const data = await api.get('/users');
-        const users = data.data.users || data.data || [];
-
-        container.innerHTML = `
-            <h5>Usuarios</h5>
-            <div class="row g-3 mb-3">
-                <div class="col-md-3">
-                    <input type="text" id="adminUserUsername" class="form-control" placeholder="Usuario" maxlength="80">
-                </div>
-                <div class="col-md-3">
-                    <input type="email" id="adminUserEmail" class="form-control" placeholder="Correo electr&oacute;nico" maxlength="120">
-                </div>
-                <div class="col-md-3">
-                    <select id="adminUserRol" class="form-select">
-                        <option value="WAITER">Mesero</option>
-                        <option value="KITCHEN">Cocina</option>
-                        <option value="CASHIER">Cajero</option>
-                        <option value="ADMIN">Administrador</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <input type="password" id="adminUserPassword" class="form-control" placeholder="Contrase&ntilde;a">
-                </div>
-            </div>
-            <div class="d-grid mb-3">
-                <button id="adminUserCreate" class="btn btn-primary">Crear usuario</button>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
-                    <thead><tr><th>Usuario</th><th>Correo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
-                    <tbody id="adminUsuariosBody"></tbody>
-                </table>
-            </div>
-        `;
-
-        const tbody = container.querySelector('#adminUsuariosBody');
-        users.forEach(u => {
-            const tr = document.createElement('tr');
-
-            const tdUsername = document.createElement('td');
-            tdUsername.textContent = u.username;
-            tr.appendChild(tdUsername);
-
-            const tdEmail = document.createElement('td');
-            tdEmail.textContent = u.email;
-            tr.appendChild(tdEmail);
-
-            const tdRol = document.createElement('td');
-            tdRol.textContent = u.rol;
-            tr.appendChild(tdRol);
-
-            const tdEstado = document.createElement('td');
-            const badgeEstado = document.createElement('span');
-            badgeEstado.className = 'badge bg-' + (u.is_active ? 'success' : 'danger');
-            badgeEstado.textContent = u.is_active ? 'Activo' : 'Inactivo';
-            tdEstado.appendChild(badgeEstado);
-            tr.appendChild(tdEstado);
-
-            const tdAcciones = document.createElement('td');
-            const btnEdit = document.createElement('button');
-            btnEdit.type = 'button';
-            btnEdit.className = 'btn btn-sm btn-outline-secondary';
-            btnEdit.textContent = 'Editar';
-            btnEdit.addEventListener('click', () => this.editUsuario(u.id, u.username, u.email, u.rol, u.is_active));
-            tdAcciones.appendChild(btnEdit);
-
-            if (u.is_active) {
-                const btnDel = document.createElement('button');
-                btnDel.type = 'button';
-                btnDel.className = 'btn btn-sm btn-outline-danger';
-                btnDel.textContent = 'Desactivar';
-                btnDel.addEventListener('click', () => this.deleteUsuario(u.id));
-                tdAcciones.appendChild(btnDel);
-            } else {
-                const btnReact = document.createElement('button');
-                btnReact.type = 'button';
-                btnReact.className = 'btn btn-sm btn-outline-success';
-                btnReact.textContent = 'Reactivar';
-                btnReact.addEventListener('click', () => this.reactivarUsuario(u.id));
-                tdAcciones.appendChild(btnReact);
-            }
-            tr.appendChild(tdAcciones);
-
-            tbody.appendChild(tr);
-        });
-
-        this.container.querySelector('#adminUserCreate').addEventListener('click', () => this.crearUsuario());
-    }
-
-    async crearUsuario() {
-        const data = {
-            username: this.container.querySelector('#adminUserUsername').value.trim(),
-            email: this.container.querySelector('#adminUserEmail').value.trim(),
-            rol: this.container.querySelector('#adminUserRol').value,
-            password: this.container.querySelector('#adminUserPassword').value
-        };
-        if (!data.username || !data.email || !data.password) { flash('Todos los campos son requeridos.', 'danger'); return; }
-        try {
-            await api.post('/users', data);
-            flash('Usuario creado.', 'success');
-            this.container.querySelector('#adminUserUsername').value = '';
-            this.container.querySelector('#adminUserEmail').value = '';
-            this.container.querySelector('#adminUserPassword').value = '';
-            this.loadSection('usuarios');
-        } catch (err) { flash(err.message, 'danger'); }
-    }
-
-    async editUsuario(id, username, email, rol, isActive) {
-        const values = await showActionDialog({
-            title: 'Editar usuario',
-            fields: [
-                { name: 'username', label: 'Usuario', value: username, required: true },
-                { name: 'email', label: 'Correo', type: 'email', value: email, required: true },
-                { name: 'rol', label: 'Rol', value: rol, required: true, options: {
-                    ADMIN: 'Administrador', WAITER: 'Mesero', KITCHEN: 'Cocina', CASHIER: 'Caja'
-                } }
+        const { data } = await api.get('/users');
+        this.renderSection(container, {
+            title: 'Usuarios',
+            bodyId: 'adminUsuariosBody',
+            headers: ['Usuario', 'Correo', 'Rol', 'Estado', 'Acciones'],
+            items: data?.users || data || [],
+            cells: usuario => [
+                usuario.username, usuario.email, usuario.rol,
+                this.badge(usuario.is_active ? 'Activo' : 'Inactivo', usuario.is_active ? 'success' : 'danger')
+            ],
+            add: () => this.saveUsuario(),
+            actions: usuario => [
+                ['Ver detalles', 'secondary', () => this.showDetails('Detalles de usuario', {
+                    Usuario: usuario.username,
+                    Correo: usuario.email,
+                    Rol: usuario.rol,
+                    Estado: usuario.is_active ? 'Activo' : 'Inactivo'
+                })],
+                ['Editar', 'secondary', () => this.saveUsuario(usuario)],
+                usuario.is_active
+                    ? ['Desactivar', 'danger', () => this.desactivarUsuario(usuario.id)]
+                    : ['Reactivar', 'success', () => this.reactivarUsuario(usuario.id)]
             ]
         });
-        if (!values) return;
-
-        try {
-            await api.patch(`/users/${id}`, values);
-            flash('Usuario actualizado.', 'success');
-            this.loadSection('usuarios');
-        } catch (err) { flash(err.message, 'danger'); }
     }
 
-    async deleteUsuario(id) {
+    saveUsuario(usuario) {
+        const fields = [
+            { name: 'username', label: 'Usuario', value: usuario?.username, maxLength: 80, required: true },
+            { name: 'email', label: 'Correo', type: 'email', value: usuario?.email, maxLength: 120, required: true },
+            { name: 'rol', label: 'Rol', value: usuario?.rol ?? 'WAITER', required: true, options: {
+                WAITER: 'Mesero', KITCHEN: 'Cocina', CASHIER: 'Cajero', ADMIN: 'Administrador'
+            } }
+        ];
+        if (!usuario) fields.push({ name: 'password', label: 'Contraseña', type: 'password', required: true });
+        return this.saveRecord({
+            section: 'usuarios',
+            title: usuario ? 'Editar usuario' : 'Agregar usuario',
+            fields,
+            url: '/users',
+            id: usuario?.id,
+            payload: values => {
+                if (!values.username.trim()) throw new Error('Usuario requerido.');
+                return usuario ? values : { ...values, username: values.username.trim(), email: values.email.trim() };
+            },
+            success: usuario ? 'Usuario actualizado.' : 'Usuario creado.'
+        });
+    }
+
+    async desactivarUsuario(id) {
         if (!await confirmAction({
             title: 'Desactivar usuario', message: '¿Desactivar este usuario?', acceptLabel: 'Desactivar', danger: true
         })) return;
@@ -566,7 +437,9 @@ class AdminView {
         } catch (err) { flash(err.message, 'danger'); }
     }
 
-    destroy() {}
+    destroy() {
+        this.disposeActions(this.container);
+    }
 }
 
 window.appAdmin = null;
