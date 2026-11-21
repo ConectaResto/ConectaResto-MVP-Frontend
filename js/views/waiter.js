@@ -29,7 +29,7 @@ class WaiterView {
 
         this.container.querySelectorAll('#waiterTabs button').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const target = e.target.dataset.bsTarget.replace('#', '');
+                const target = e.currentTarget.dataset.bsTarget.slice('#waiter'.length).toLowerCase();
                 this.activeTab = target;
                 this.loadTab(target);
             });
@@ -39,7 +39,7 @@ class WaiterView {
     }
 
     async loadTab(tab) {
-        const container = this.container.querySelector(`#waiter${tab}`);
+        const container = this.container.querySelector(`#waiter${tab.charAt(0).toUpperCase()}${tab.slice(1)}`);
         container.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div></div>';
 
         try {
@@ -310,12 +310,12 @@ class WaiterView {
             }
 
             this.pedidoItems.push({ producto_id: productoId, cantidad, productoName, precio });
-            renderItems();
+            this._renderItems();
         });
 
         window.removePedidoItem = (idx) => {
             this.pedidoItems.splice(idx, 1);
-            renderItems();
+            this._renderItems();
         };
 
         crearBtn.addEventListener('click', async () => {
@@ -330,7 +330,7 @@ class WaiterView {
                 await api.post(`/servicios/${servicioId}/pedidos`, { items });
                 flash('Pedido creado exitosamente.', 'success');
                 this.pedidoItems = [];
-                renderItems();
+                this._renderItems();
                 await this.loadPedidosData();
                 this.renderPedidosGroups();
             } catch (err) {
@@ -338,6 +338,7 @@ class WaiterView {
             }
         });
 
+        this._renderItems();
         this.renderPedidosGroups();
     }
 
