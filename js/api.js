@@ -1,8 +1,14 @@
+const API_ORIGIN = 'http://127.0.0.1:5000';
+
+function apiUrl(path) {
+    return new URL(path, API_ORIGIN).href;
+}
+
 let cachedCsrfToken = null;
 
 async function getCsrfToken() {
-    const response = await fetch('/auth/csrf', {
-        credentials: 'same-origin',
+    const response = await fetch(apiUrl('/auth/csrf'), {
+        credentials: 'include',
         headers: { Accept: 'application/json' }
     });
     if (!response.ok) {
@@ -31,8 +37,8 @@ async function apiRequest(url, options = {}) {
         headers['X-CSRF-Token'] = cachedCsrfToken;
     }
 
-    const response = await fetch(url, {
-        credentials: 'same-origin',
+    const response = await fetch(apiUrl(url), {
+        credentials: 'include',
         ...options,
         headers
     });
@@ -50,6 +56,10 @@ async function apiRequest(url, options = {}) {
 
     if (!response.ok || (data && data.success === false)) {
         throw new Error(data ? data.error : 'Error en la solicitud');
+    }
+
+    if (url === '/auth/login' || url === '/auth/logout') {
+        cachedCsrfToken = null;
     }
 
     return data;

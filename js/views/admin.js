@@ -157,7 +157,11 @@ class AdminView {
 
     async verQr(mesaId) {
         try {
-            const blob = await fetch(`/admin/mesas/${mesaId}/qr.svg`, { credentials: 'same-origin' }).then(r => r.blob());
+            const response = await fetch(apiUrl(`/admin/mesas/${mesaId}/qr.svg`), { credentials: 'include' });
+            if (!response.ok) {
+                throw new Error('No se pudo cargar el QR de la mesa.');
+            }
+            const blob = await response.blob();
             const url = URL.createObjectURL(blob);
             const img = document.createElement('img');
             img.src = url;

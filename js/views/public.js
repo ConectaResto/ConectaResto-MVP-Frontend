@@ -28,7 +28,7 @@ class PublicView {
                             No se ha especificado un token de mesa v&aacute;lido.
                         </div>
                         <p class="text-muted">Escanea el QR de una mesa o accede mediante el enlace proporcionado.</p>
-                        <p class="text-muted">Ejemplo: <code>/app/?token=TOKEN_DE_LA_MESA#public</code></p>
+                        <p class="text-muted">Ejemplo: <code>/?token=TOKEN_DE_LA_MESA#public</code></p>
                     </div>
                 </div>
             `;
@@ -173,9 +173,9 @@ class PublicView {
         img.style.objectFit = 'cover';
         const imageUrl = p.image_url || '/static/img/default-product.svg';
         if (/^\/[^/]/.test(imageUrl)) {
-            img.src = imageUrl;
+            img.src = apiUrl(imageUrl);
         } else {
-            img.src = '/static/img/default-product.svg';
+            img.src = apiUrl('/static/img/default-product.svg');
         }
 
         const cardBody = document.createElement('div');
