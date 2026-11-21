@@ -3,9 +3,11 @@ class WaiterView {
         this.container = container;
         this.mesas = [];
         this.servicios = [];
+        this.serviciosCargados = false;
+        this.mesasEnApertura = new Set();
         this.pedidos = [];
+        this.mesasPorServicio = new Map();
         this.productos = [];
-        this.pedidoItems = [];
         this.activeTab = 'mesas';
     }
 
@@ -51,39 +53,28 @@ class WaiterView {
     }
 
     async renderMesasTab(container) {
-        await this.loadMesas();
-        await this.loadServicios();
-
         container.innerHTML = `
-            <h5>Mesas</h5>
-            <div class="table-responsive mb-3">
-                <table class="table table-sm align-middle" id="waiterMesasTable">
-                    <thead><tr><th>N&uacute;mero</th><th>Estado</th></tr></thead>
-                    <tbody id="waiterMesasBody"></tbody>
-                </table>
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                <h5 class="mb-0">Mesas</h5>
+                <button id="waiterRefreshMesas" class="btn btn-outline-secondary">Actualizar</button>
             </div>
-            <hr>
-            <h5>Abrir servicio</h5>
-            <div class="row g-2 mb-3">
-                <div class="col-md-4">
-                    <select id="waiterMesaSelect" class="form-select"></select>
-                </div>
-                <div class="col-md-4">
-                    <button id="waiterOpenService" class="btn btn-primary">Abrir servicio</button>
-                </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button id="waiterRefreshMesas" class="btn btn-outline-secondary">Actualizar</button>
-                </div>
-            </div>
-            <div id="waiterFlashMesas" class="mb-3"></div>
+            <div class="table-responsive mb-3" id="waiterMesasList"></div>
             <h5>Servicios activos</h5>
             <div id="waiterServiciosList"></div>
         `;
 
-        this.renderMesasTable();
-        this.container.querySelector('#waiterRefreshMesas').addEventListener('click', () => this.loadTab('mesas'));
-        this.container.querySelector('#waiterOpenService').addEventListener('click', () => this.openService());
-        this.renderServicios();
+        container.querySelector('#waiterRefreshMesas')
+            .addEventListener('click', () => this.refreshMesas(container));
+        await this.refreshMesas(container);
+    }
+
+    async refreshMesas(container) {
+        this.serviciosCargados = false;
+        await this.loadMesas();
+        await this.loadServicios();
+        if (!container.isConnected) return;
+        this.renderMesasTable(container.querySelector('#waiterMesasList'));
+        this.renderServicios(container.querySelector('#waiterServiciosList'));
     }
 
     async loadMesas() {
@@ -96,52 +87,57 @@ class WaiterView {
         }
     }
 
-    renderMesasTable() {
-        const tbody = this.container.querySelector('#waiterMesasBody');
-        const select = this.container.querySelector('#waiterMesaSelect');
-        tbody.innerHTML = '';
-        select.innerHTML = '<option value="">Seleccione una mesa</option>';
-
-        this.mesas.forEach(m => {
-            const tr = document.createElement('tr');
-
-            const tdNumero = document.createElement('td');
-            tdNumero.textContent = 'Mesa ' + m.numero;
-            tr.appendChild(tdNumero);
-
-            const tdEstado = document.createElement('td');
-            const badge = document.createElement('span');
-            badge.className = 'badge bg-' + badgeColor(m.estado);
-            badge.textContent = estadoLegible(m.estado);
-            tdEstado.appendChild(badge);
-            tr.appendChild(tdEstado);
-
-            tbody.appendChild(tr);
-
-            if (m.estado === 'DISPONIBLE') {
-                const opt = document.createElement('option');
-                opt.value = m.id;
-                opt.textContent = 'Mesa ' + m.numero;
-                select.appendChild(opt);
-            }
-        });
+    hasActiveService(mesaId) {
+        return this.servicios.some(servicio => servicio.mesa_id === mesaId && servicio.estado === 'ACTIVO');
     }
 
-    async openService() {
-        const select = this.container.querySelector('#waiterMesaSelect');
-        const mesaId = select.value;
-        if (!mesaId) {
-            flash('Seleccione una mesa.', 'danger');
-            return;
-        }
+    renderStateBadge(estado) {
+        const badge = document.createElement('span');
+        badge.className = `badge bg-${badgeColor(estado)}`;
+        badge.textContent = estadoLegible(estado);
+        return badge;
+    }
+
+    renderMesasTable(container) {
+        const rows = this.mesas.map(mesa => [`Mesa ${mesa.numero}`, this.renderStateBadge(mesa.estado)]);
+        const table = renderTable(container, ['Número', 'Estado', 'Acciones'], rows, (_, index) => {
+            const mesa = this.mesas[index];
+            if (this.hasActiveService(mesa.id)) return 'Servicio activo';
+            if (mesa.estado !== 'DISPONIBLE') return 'No disponible';
+            if (!this.serviciosCargados) return 'Servicio sin verificar';
+
+            const opening = this.mesasEnApertura.has(mesa.id);
+            const button = createButton(opening ? 'Abriendo…' : 'Abrir servicio', {
+                className: 'btn btn-sm btn-primary',
+                onClick: event => this.openService(mesa.id, event.currentTarget)
+            });
+            button.setAttribute('aria-label', `Abrir servicio para mesa ${mesa.numero}`);
+            button.disabled = opening;
+            return button;
+        });
+        table.id = 'waiterMesasTable';
+        table.className = 'table table-sm align-middle';
+        table.tBodies[0].id = 'waiterMesasBody';
+    }
+
+    async openService(mesaId, button) {
+        const mesa = this.mesas.find(row => row.id === mesaId);
+        const container = button.closest('#waiterMesas');
+        if (!container || mesa?.estado !== 'DISPONIBLE' || !this.serviciosCargados ||
+            this.hasActiveService(mesaId) || this.mesasEnApertura.has(mesaId)) return;
+
+        this.mesasEnApertura.add(mesaId);
+        button.disabled = true;
+        button.textContent = 'Abriendo…';
 
         try {
-            await api.post('/servicios', { mesa_id: parseInt(mesaId) });
+            await api.post('/servicios', { mesa_id: mesaId });
             flash('Servicio abierto.', 'success');
-            select.value = '';
-            await this.loadTab('mesas');
         } catch (err) {
             flash(err.message, 'danger');
+        } finally {
+            this.mesasEnApertura.delete(mesaId);
+            if (container.isConnected) await this.refreshMesas(container);
         }
     }
 
@@ -149,340 +145,317 @@ class WaiterView {
         try {
             const data = await api.get('/servicios?estado=ACTIVO');
             this.servicios = data.data || [];
+            this.serviciosCargados = true;
         } catch (err) {
             this.servicios = [];
+            this.serviciosCargados = false;
             flash(err.message, 'danger');
         }
     }
 
-    renderServicios() {
-        const container = this.container.querySelector('#waiterServiciosList');
-        if (this.servicios.length === 0) {
+    renderServicios(container) {
+        if (!this.serviciosCargados) {
+            container.innerHTML = '<p class="text-muted">No se pudieron verificar los servicios activos.</p>';
+            return;
+        }
+
+        const activos = this.servicios.filter(servicio => servicio.estado === 'ACTIVO');
+        if (!activos.length) {
             container.innerHTML = '<p class="text-muted">No hay servicios activos.</p>';
             return;
         }
 
         const wrapper = document.createElement('div');
         wrapper.className = 'table-responsive';
-        const table = document.createElement('table');
+        const rows = activos.map(servicio => [
+            `#${servicio.id}`, `Mesa ${servicio.mesa_id}`, this.renderStateBadge(servicio.estado), servicio.total
+        ]);
+        const table = renderTable(wrapper, ['Servicio', 'Mesa', 'Estado', 'Total'], rows);
         table.className = 'table table-sm align-middle';
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        ['Servicio', 'Mesa', 'Estado', 'Total'].forEach(h => {
-            const th = document.createElement('th');
-            th.textContent = h;
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-
-        const tbody = document.createElement('tbody');
-        this.servicios.forEach(s => {
-            const tr = document.createElement('tr');
-
-            const tdServicio = document.createElement('td');
-            tdServicio.textContent = '#' + s.id;
-            tr.appendChild(tdServicio);
-
-            const tdMesa = document.createElement('td');
-            tdMesa.textContent = 'Mesa ' + s.mesa_id;
-            tr.appendChild(tdMesa);
-
-            const tdEstado = document.createElement('td');
-            const badge = document.createElement('span');
-            badge.className = 'badge bg-' + badgeColor(s.estado);
-            badge.textContent = estadoLegible(s.estado);
-            tdEstado.appendChild(badge);
-            tr.appendChild(tdEstado);
-
-            const tdTotal = document.createElement('td');
-            tdTotal.textContent = s.total;
-            tr.appendChild(tdTotal);
-
-            tbody.appendChild(tr);
-        });
-        table.appendChild(tbody);
-        wrapper.appendChild(table);
-        container.innerHTML = '';
-        container.appendChild(wrapper);
+        container.replaceChildren(wrapper);
     }
 
     async renderPedidosTab(container) {
         await this.loadPedidosData();
 
         container.innerHTML = `
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <h5>Nuevo pedido</h5>
-                    <div class="row g-2">
-                        <div class="col-md-5">
-                            <select id="waiterPedidoServicio" class="form-select"></select>
-                        </div>
-                        <div class="col-md-4">
-                            <select id="waiterPedidoProducto" class="form-select"></select>
-                        </div>
-                        <div class="col-md-2">
-                            <input type="number" id="waiterPedidoCantidad" class="form-control" value="1" min="1">
-                        </div>
-                        <div class="col-md-1 d-flex align-items-end">
-                            <button id="waiterPedidoAdd" class="btn btn-primary w-100">Agregar</button>
-                        </div>
-                    </div>
-                    <div id="waiterPedidoItems" class="mt-2 p-2 border rounded bg-light"></div>
-                    <button id="waiterPedidoCrear" class="btn btn-success mt-2">Crear pedido</button>
-                </div>
-                <div class="col-md-8">
-                    <h5>Pendientes de autorizaci&oacute;n</h5>
-                    <div id="waiterPendientes" class="mb-3"></div>
-                    <h5>Pedidos en curso</h5>
-                    <div id="waiterEnCurso" class="mb-3"></div>
-                    <h5>Historial (entregados)</h5>
-                    <div id="waiterHistorial"></div>
-                </div>
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                <h5 class="mb-0">Pedidos</h5>
+                <div id="waiterPedidoToolbar"></div>
             </div>
+            <section class="border rounded p-3 mb-3" aria-labelledby="waiterActivosTitulo">
+                <h5 id="waiterActivosTitulo">Pedidos activos</h5>
+                <h6>Pendientes de autorización</h6>
+                <div id="waiterPendientes" class="mb-3"></div>
+                <h6>En curso</h6>
+                <div id="waiterEnCurso"></div>
+            </section>
+            <section class="border rounded p-3 bg-light" aria-labelledby="waiterHistorialTitulo">
+                <h5 id="waiterHistorialTitulo">Historial de entregados</h5>
+                <div id="waiterHistorial"></div>
+            </section>
         `;
+        container.querySelector('#waiterPedidoToolbar')
+            .append(createButton('Nuevo pedido', { onClick: () => this.openPedidoModal(container) }));
+        this.renderPedidosGroups();
+    }
 
-        const servicioSelect = this.container.querySelector('#waiterPedidoServicio');
-        const productoSelect = this.container.querySelector('#waiterPedidoProducto');
-        const cantidadInput = this.container.querySelector('#waiterPedidoCantidad');
-        const addBtn = this.container.querySelector('#waiterPedidoAdd');
-        const itemsContainer = this.container.querySelector('#waiterPedidoItems');
-        const crearBtn = this.container.querySelector('#waiterPedidoCrear');
+    async openPedidoModal(container) {
+        const servicios = this.servicios.filter(servicio => servicio.estado === 'ACTIVO');
+        if (!servicios.length || !this.productos.length) {
+            const message = servicios.length ? 'No hay productos disponibles.' : 'No hay servicios activos.';
+            flash(message, 'warning');
+            return;
+        }
 
-        this.servicios.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.id;
-            opt.textContent = `Mesa ${s.mesa_id} (Servicio #${s.id})`;
-            servicioSelect.appendChild(opt);
-        });
-
-        this.productos.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.textContent = `${p.name} - $${p.price}`;
-            productoSelect.appendChild(opt);
-        });
-
-        this.pedidoItems = [];
-        this._renderItems = () => {
-            itemsContainer.innerHTML = '';
-            if (this.pedidoItems.length === 0) {
-                itemsContainer.innerHTML = '<p class="text-muted small">Sin productos agregados.</p>';
-                crearBtn.disabled = true;
-                return;
+        const options = Object.fromEntries(servicios.map(servicio => [
+            servicio.id, `Mesa ${servicio.mesa_id} (Servicio #${servicio.id})`
+        ]));
+        const productos = new Map(this.productos.map(producto => [producto.id, producto]));
+        const items = [];
+        const saved = await showActionDialog({
+            title: 'Nuevo pedido',
+            fields: [{
+                name: 'servicio_id', label: 'Servicio', options, placeholder: 'Seleccione un servicio',
+                value: servicios.length === 1 ? servicios[0].id : '', required: true
+            }],
+            renderContent: submit => this.renderPedidoItemsEditor(productos, items, submit),
+            acceptLabel: 'Crear pedido',
+            acceptClass: 'btn btn-success',
+            onSubmit: ({ servicio_id }) => {
+                const servicioId = Number(servicio_id);
+                if (!servicios.some(servicio => servicio.id === servicioId) || !items.length) {
+                    throw new Error('Seleccione un servicio y agregue al menos un producto.');
+                }
+                return api.post(`/servicios/${servicioId}/pedidos`, {
+                    items: items.map(({ producto, cantidad }) => ({ producto_id: producto.id, cantidad }))
+                });
             }
-            let total = 0;
-            this.pedidoItems.forEach((it, idx) => {
-                total += parseFloat(it.precio) * it.cantidad;
-                const div = document.createElement('div');
-                div.className = 'd-flex justify-content-between align-items-center mb-1';
+        });
+        if (!saved) return;
 
-                const nameSpan = document.createElement('span');
-                nameSpan.textContent = it.productoName + ' x' + it.cantidad;
-                div.appendChild(nameSpan);
+        flash('Pedido creado exitosamente.', 'success');
+        if (container.isConnected) {
+            await this.loadPedidosData();
+            if (container.isConnected) this.renderPedidosGroups();
+        }
+    }
 
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'btn btn-sm btn-outline-danger';
-                removeBtn.textContent = '&times;';
-                removeBtn.addEventListener('click', () => this.removePedidoItem(idx));
-                div.appendChild(removeBtn);
+    renderPedidoItemsEditor(productos, items, submit) {
+        submit.id = 'waiterPedidoCrear';
+        const content = document.createElement('div');
+        const controls = document.createElement('div');
+        controls.className = 'row g-2 align-items-end';
 
-                itemsContainer.appendChild(div);
-            });
-            const totalDiv = document.createElement('div');
-            totalDiv.className = 'text-end fw-bold';
-            totalDiv.textContent = 'Total: $' + total.toFixed(2);
-            itemsContainer.appendChild(totalDiv);
-            crearBtn.disabled = false;
-        };
+        const productField = createInputField({
+            id: 'waiterPedidoProducto', name: 'producto', label: 'Producto',
+            options: Object.fromEntries(Array.from(productos.values(), producto => [
+                producto.id, `${producto.name} - $${producto.price}`
+            ])),
+            value: productos.keys().next().value
+        });
+        productField.classList.add('col-12', 'col-sm-7');
+        const quantityField = createInputField({
+            id: 'waiterPedidoCantidad', name: 'cantidad', label: 'Cantidad', type: 'number', value: 1, min: 1
+        });
+        quantityField.classList.add('col-6', 'col-sm-2');
+        const productSelect = productField.querySelector('select');
+        const quantityInput = quantityField.querySelector('input');
+        const actions = document.createElement('div');
+        actions.className = 'col-6 col-sm-3 mb-3';
+        actions.append(createButton('Agregar', { className: 'btn btn-primary w-100', onClick: addItem }));
+        controls.append(productField, quantityField, actions);
 
-        addBtn.addEventListener('click', () => {
-            const productoId = parseInt(productoSelect.value);
-            const cantidad = parseInt(cantidadInput.value);
-            const productoText = productoSelect.options[productoSelect.selectedIndex]?.text || '';
-            const productoName = productoText.split(' - ')[0];
-            const precio = parseFloat(productoText.split('$')[1] || 0);
+        const list = document.createElement('div');
+        list.id = 'waiterPedidoItems';
+        list.className = 'p-2 border rounded bg-light mb-3';
+        list.setAttribute('aria-live', 'polite');
+        content.append(controls, list);
 
-            if (!productoId || !cantidad || cantidad <= 0) {
+        quantityInput.addEventListener('keydown', event => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addItem();
+            }
+        });
+
+        function addItem() {
+            const producto = productos.get(Number(productSelect.value));
+            const cantidad = quantityInput.valueAsNumber;
+            if (!producto || !Number.isSafeInteger(cantidad) || cantidad <= 0) {
                 flash('Seleccione un producto y cantidad válida.', 'danger');
                 return;
             }
+            items.push({ producto, cantidad });
+            renderItems();
+        }
 
-            this.pedidoItems.push({ producto_id: productoId, cantidad, productoName, precio });
-            this._renderItems();
-        });
-
-        window.removePedidoItem = (idx) => {
-            this.pedidoItems.splice(idx, 1);
-            this._renderItems();
-        };
-
-        crearBtn.addEventListener('click', async () => {
-            const servicioId = parseInt(servicioSelect.value);
-            if (!servicioId || this.pedidoItems.length === 0) {
-                flash('Seleccione un servicio y agregue al menos un producto.', 'danger');
+        function renderItems() {
+            list.replaceChildren();
+            submit.disabled = items.length === 0;
+            if (!items.length) {
+                const empty = document.createElement('p');
+                empty.className = 'text-muted small mb-0';
+                empty.textContent = 'Sin productos agregados.';
+                list.append(empty);
                 return;
             }
 
-            const items = this.pedidoItems.map(it => ({ producto_id: it.producto_id, cantidad: it.cantidad }));
-            try {
-                await api.post(`/servicios/${servicioId}/pedidos`, { items });
-                flash('Pedido creado exitosamente.', 'success');
-                this.pedidoItems = [];
-                this._renderItems();
-                await this.loadPedidosData();
-                this.renderPedidosGroups();
-            } catch (err) {
-                flash(err.message, 'danger');
+            let total = 0;
+            for (const [index, { producto, cantidad }] of items.entries()) {
+                total += Number(producto.price) * cantidad;
+                const row = document.createElement('div');
+                row.className = 'd-flex justify-content-between align-items-center gap-2 mb-1';
+                const name = document.createElement('span');
+                name.textContent = `${producto.name} x${cantidad}`;
+                const remove = createButton('Quitar', {
+                    className: 'btn btn-sm btn-outline-danger',
+                    onClick: () => {
+                        items.splice(index, 1);
+                        renderItems();
+                    }
+                });
+                remove.setAttribute('aria-label', `Quitar ${producto.name}`);
+                row.append(name, remove);
+                list.append(row);
             }
-        });
+            const amount = document.createElement('div');
+            amount.className = 'text-end fw-bold';
+            amount.textContent = `Total: $${total.toFixed(2)}`;
+            list.append(amount);
+        }
 
-        this._renderItems();
-        this.renderPedidosGroups();
+        renderItems();
+        return content;
     }
 
     async loadPedidosData() {
         try {
-            const [pedidosRes, serviciosRes, productosRes] = await Promise.all([
+            const [pedidosRes, serviciosRes, productosRes, mesasRes] = await Promise.all([
                 api.get('/pedidos'),
                 api.get('/servicios'),
-                api.get('/products')
+                api.get('/products'),
+                api.get('/mesas').catch(() => {
+                    flash('No se pudieron consultar los números de mesa.', 'warning');
+                    return null;
+                })
             ]);
             this.pedidos = pedidosRes.data || [];
             this.servicios = serviciosRes.data || [];
             this.productos = (productosRes.data || []).filter(p => p.is_active !== false);
+            const numeros = new Map((mesasRes?.data || []).map(mesa => [mesa.id, mesa.numero]));
+            this.mesasPorServicio = new Map(this.servicios.map(servicio => [
+                servicio.id, numeros.get(servicio.mesa_id)
+            ]));
         } catch (err) {
             this.pedidos = [];
             this.servicios = [];
             this.productos = [];
+            this.mesasPorServicio.clear();
             flash(err.message, 'danger');
         }
     }
 
-    renderPedidosGroups() {
-        const nombres = new Map(this.productos.map(p => [p.id, p.name]));
-        const mesaPorServicio = new Map(this.servicios.map(s => [s.id, s.mesa_id]));
+    mesaDelPedido(pedido) {
+        const numero = this.mesasPorServicio.get(pedido.servicio_id);
+        return numero === undefined ? 'Mesa sin identificar' : `Mesa ${numero}`;
+    }
 
-        const pendientes = this.pedidos.filter(p =>
-            p.estado === 'PENDIENTE' && p.estado_preparacion === 'NO_ENVIADO' && p.autorizado_por_id === null
+    productosDelPedido(pedido, nombres) {
+        return pedido.items.map(item =>
+            `${item.cantidad} x ${nombres.get(item.producto_id) ?? 'Producto fuera del catálogo'}`
         );
-        const enCurso = this.pedidos.filter(p => p.estado !== 'ENTREGADO' && !(p.estado === 'PENDIENTE' && p.estado_preparacion === 'NO_ENVIADO' && p.autorizado_por_id === null));
-        const historial = this.pedidos.filter(p => p.estado === 'ENTREGADO');
+    }
 
-        pendientes.sort((a, b) => b.id - a.id);
-        enCurso.sort((a, b) => b.id - a.id);
-        historial.sort((a, b) => b.id - a.id);
+    pendienteDeAutorizar(pedido) {
+        return pedido.estado === 'PENDIENTE' && pedido.estado_preparacion === 'NO_ENVIADO' &&
+            pedido.autorizado_por_id === null;
+    }
 
-        const renderGroup = (containerId, pedidos, emptyMsg, allowActions = true) => {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            if (pedidos.length === 0) {
-                container.innerHTML = `<p class="text-muted">${emptyMsg}</p>`;
-                return;
+    renderPedidosGroups() {
+        const nombres = new Map(this.productos.map(producto => [producto.id, producto.name]));
+        const pendientes = [];
+        const enCurso = [];
+        const historial = [];
+        const pedidos = [...this.pedidos].sort((a, b) => b.id - a.id);
+        for (const pedido of pedidos) {
+            if (pedido.estado === 'ENTREGADO') historial.push(pedido);
+            else if (this.pendienteDeAutorizar(pedido)) pendientes.push(pedido);
+            else enCurso.push(pedido);
+        }
+        this.renderPedidosTable('waiterPendientes', pendientes, nombres, 'No hay pedidos pendientes de autorización.');
+        this.renderPedidosTable('waiterEnCurso', enCurso, nombres, 'No hay pedidos en curso.');
+        this.renderPedidosTable('waiterHistorial', historial, nombres, 'No hay pedidos entregados.', true);
+    }
+
+    renderPedidosTable(id, pedidos, nombres, emptyMessage, historial = false) {
+        const container = this.container.querySelector(`#${id}`);
+        if (!container) return;
+        if (!pedidos.length) {
+            const empty = document.createElement('p');
+            empty.className = 'text-muted mb-0';
+            empty.textContent = emptyMessage;
+            container.replaceChildren(empty);
+            return;
+        }
+
+        const headers = ['Mesa', 'Productos', 'Estado'];
+        if (!historial) headers.push('Preparación');
+        headers.push('Total', 'Acciones');
+        const rows = pedidos.map(pedido => {
+            const row = [
+                this.mesaDelPedido(pedido),
+                this.productosDelPedido(pedido, nombres).join(', '),
+                this.renderStateBadge(pedido.estado)
+            ];
+            if (!historial) row.push(this.renderStateBadge(pedido.estado_preparacion));
+            row.push(pedido.total);
+            return row;
+        });
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'table-responsive';
+        const table = renderTable(wrapper, headers, rows,
+            (_, index) => this.renderPedidoActions(pedidos[index], historial));
+        table.className = 'table table-sm align-middle mb-0';
+        for (const badge of table.querySelectorAll('.badge.bg-warning, .badge.bg-info')) {
+            badge.classList.add('text-dark');
+        }
+        container.replaceChildren(wrapper);
+    }
+
+    renderPedidoActions(pedido, historial) {
+        const actions = document.createElement('div');
+        actions.className = 'd-flex flex-wrap gap-2';
+        if (!historial) {
+            if (this.pendienteDeAutorizar(pedido)) {
+                actions.append(createButton('Autorizar', {
+                    className: 'btn btn-sm btn-primary',
+                    onClick: () => this.autorizar(pedido.id)
+                }));
+            } else if (pedido.estado === 'PENDIENTE' && pedido.estado_preparacion === 'NO_ENVIADO') {
+                actions.append(createButton('Enviar a cocina', {
+                    className: 'btn btn-sm btn-primary',
+                    onClick: () => this.enviarCocina(pedido.id)
+                }));
+            } else if (pedido.estado === 'LISTO') {
+                actions.append(createButton('Entregar', {
+                    className: 'btn btn-sm btn-success',
+                    onClick: () => this.entregar(pedido.id)
+                }));
             }
-
-            const table = document.createElement('table');
-            table.className = 'table table-sm align-middle';
-            const thead = document.createElement('thead');
-            const headerRow = document.createElement('tr');
-            ['ID', 'Mesa', 'Estado', 'Preparaci&oacute;n', 'Total', 'Acciones'].forEach(h => {
-                const th = document.createElement('th');
-                th.textContent = h;
-                headerRow.appendChild(th);
-            });
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
-
-            const tbody = document.createElement('tbody');
-            pedidos.forEach(p => {
-                const mesaNumero = mesaPorServicio.get(p.servicio_id) || 'Desconocida';
-                const tr = document.createElement('tr');
-
-                const tdId = document.createElement('td');
-                tdId.textContent = '#' + p.id;
-                tr.appendChild(tdId);
-
-                const tdMesa = document.createElement('td');
-                tdMesa.textContent = 'Mesa ' + mesaNumero;
-                tr.appendChild(tdMesa);
-
-                const tdEstado = document.createElement('td');
-                const badgeEstado = document.createElement('span');
-                badgeEstado.className = 'badge bg-' + badgeColor(p.estado);
-                badgeEstado.textContent = estadoLegible(p.estado);
-                tdEstado.appendChild(badgeEstado);
-                tr.appendChild(tdEstado);
-
-                const tdPrep = document.createElement('td');
-                tdPrep.textContent = estadoLegible(p.estado_preparacion);
-                tr.appendChild(tdPrep);
-
-                const tdTotal = document.createElement('td');
-                tdTotal.textContent = p.total;
-                tr.appendChild(tdTotal);
-
-                const tdAcciones = document.createElement('td');
-                const actions = [];
-                if (allowActions && p.estado === 'PENDIENTE' && p.estado_preparacion === 'NO_ENVIADO' && p.autorizado_por_id === null) {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'btn btn-sm btn-primary';
-                    btn.textContent = 'Autorizar';
-                    btn.addEventListener('click', () => this.autorizar(p.id));
-                    tdAcciones.appendChild(btn);
-                }
-                if (allowActions && p.estado === 'PENDIENTE' && p.estado_preparacion === 'NO_ENVIADO' && p.autorizado_por_id !== null) {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'btn btn-sm btn-primary';
-                    btn.textContent = 'Enviar a cocina';
-                    btn.addEventListener('click', () => this.enviarCocina(p.id));
-                    tdAcciones.appendChild(btn);
-                }
-                if (allowActions && p.estado === 'LISTO') {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = 'btn btn-sm btn-success';
-                    btn.textContent = 'Entregar';
-                    btn.addEventListener('click', () => this.entregar(p.id));
-                    tdAcciones.appendChild(btn);
-                }
-                const btnDet = document.createElement('button');
-                btnDet.type = 'button';
-                btnDet.className = 'btn btn-sm btn-outline-secondary';
-                btnDet.textContent = 'Detalles';
-                btnDet.addEventListener('click', () => this.detalles(p.id));
-                tdAcciones.appendChild(btnDet);
-                tr.appendChild(tdAcciones);
-
-                tbody.appendChild(tr);
-
-                // Detalles de ítems
-                const trDet = document.createElement('tr');
-                const tdDet = document.createElement('td');
-                tdDet.colSpan = 6;
-                const small = document.createElement('small');
-                const itemTexts = p.items.map(i => i.cantidad + ' x ' + (nombres.get(i.producto_id) || 'Producto #' + i.producto_id));
-                small.textContent = itemTexts.join(', ');
-                tdDet.appendChild(small);
-                trDet.appendChild(tdDet);
-                tbody.appendChild(trDet);
-            });
-            table.appendChild(tbody);
-            container.innerHTML = '';
-            container.appendChild(table);
-        };
-
-        renderGroup('waiterPendientes', pendientes, 'No hay pedidos pendientes de autorizaci&oacute;n.', true);
-        renderGroup('waiterEnCurso', enCurso, 'No hay pedidos en curso.', true);
-        renderGroup('waiterHistorial', historial, 'No hay pedidos entregados en el historial.', false);
+        }
+        actions.append(createButton('Ver detalles', {
+            className: 'btn btn-sm btn-outline-secondary',
+            onClick: () => this.detalles(pedido.id)
+        }));
+        return actions;
     }
 
     async autorizar(pedidoId) {
         try {
             await api.post(`/pedidos/${pedidoId}/autorizar`, {});
-            flash(`Pedido #${pedidoId} autorizado.`, 'success');
+            flash('Pedido autorizado.', 'success');
             await this.loadPedidosData();
             this.renderPedidosGroups();
         } catch (err) {
@@ -493,7 +466,7 @@ class WaiterView {
     async enviarCocina(pedidoId) {
         try {
             await api.post(`/pedidos/${pedidoId}/enviar-cocina`, {});
-            flash(`Pedido #${pedidoId} enviado a cocina.`, 'success');
+            flash('Pedido enviado a cocina.', 'success');
             await this.loadPedidosData();
             this.renderPedidosGroups();
         } catch (err) {
@@ -504,7 +477,7 @@ class WaiterView {
     async entregar(pedidoId) {
         try {
             await api.post(`/pedidos/${pedidoId}/entregar`, {});
-            flash(`Pedido #${pedidoId} entregado.`, 'success');
+            flash('Pedido entregado.', 'success');
             await this.loadPedidosData();
             this.renderPedidosGroups();
         } catch (err) {
@@ -513,21 +486,18 @@ class WaiterView {
     }
 
     async detalles(pedidoId) {
-        const p = this.pedidos.find(x => x.id === pedidoId);
-        if (!p) return;
-        const nombres = new Map(this.productos.map(x => [x.id, x.name]));
-        const items = p.items.map(i => i.cantidad + ' x ' + (nombres.get(i.producto_id) || 'Producto #' + i.producto_id)).join('\n');
+        const pedido = this.pedidos.find(item => item.id === pedidoId);
+        if (!pedido) return;
+        const nombres = new Map(this.productos.map(producto => [producto.id, producto.name]));
+        const lines = [this.mesaDelPedido(pedido), `Estado: ${estadoLegible(pedido.estado)}`];
+        if (pedido.estado !== 'ENTREGADO') lines.push(`Preparación: ${estadoLegible(pedido.estado_preparacion)}`);
+        lines.push(`Total: $${pedido.total}`, '', 'Productos:', ...this.productosDelPedido(pedido, nombres));
         await showActionDialog({
-            title: `Pedido #${p.id}`,
-            message: `Estado: ${estadoLegible(p.estado)}\nProductos:\n${items}`,
+            title: 'Detalles del pedido',
+            message: lines.join('\n'),
             acceptLabel: 'Cerrar',
             canCancel: false
         });
-    }
-
-    removePedidoItem(idx) {
-        this.pedidoItems.splice(idx, 1);
-        this._renderItems();
     }
 
     destroy() {}
