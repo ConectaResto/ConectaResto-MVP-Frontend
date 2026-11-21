@@ -93,11 +93,56 @@ class CashierView {
         }
     }
 
+    centavosDe(importe) {
+        if (typeof importe !== 'string') return null;
+        const partes = /^(\d+)(?:\.(\d{1,2}))?$/.exec(importe);
+        if (!partes) return null;
+        return BigInt(partes[1]) * 100n + BigInt((partes[2] ?? '').padEnd(2, '0'));
+    }
+
+    formatearCentavos(centavos) {
+        return `${centavos / 100n}.${(centavos % 100n).toString().padStart(2, '0')}`;
+    }
+
+    renderItemsAgrupados(items) {
+        const grupos = new Map();
+        for (const item of items) {
+            const id = item?.producto_id;
+            const cantidad = item?.cantidad;
+            if (!Number.isInteger(id) || id <= 0 || id > 2147483647 ||
+                !Number.isInteger(cantidad) || cantidad <= 0 || cantidad > 2147483647) continue;
+            const precio = this.centavosDe(item.precio_unitario);
+            if (precio === null) continue;
+
+            const clave = `${id}:${precio}`;
+            const grupo = grupos.get(clave) ?? { id, precio, cantidad: 0n };
+            grupo.cantidad += BigInt(cantidad);
+            grupos.set(clave, grupo);
+        }
+
+        if (!grupos.size) return document.createTextNode('No hay ítems válidos.');
+
+        const lista = document.createElement('ul');
+        lista.className = 'list-unstyled mb-0';
+        for (const { id, precio, cantidad } of grupos.values()) {
+            const fila = document.createElement('li');
+            fila.className = 'mb-2';
+            const producto = document.createElement('div');
+            producto.className = 'fw-semibold';
+            producto.textContent = `${cantidad} x Producto #${id}`;
+            const importes = document.createElement('small');
+            importes.className = 'd-block text-muted';
+            importes.textContent = `Unitario: ${this.formatearCentavos(precio)} · Subtotal: ${this.formatearCentavos(precio * cantidad)}`;
+            fila.append(producto, importes);
+            lista.append(fila);
+        }
+        return lista;
+    }
+
     renderDetail(servicio) {
         const container = this.container.querySelector('#cashierDetail');
 
         const pedidosHtml = servicio.pedidos.map(p => {
-            const itemsHtml = p.items.map(i => i.cantidad + ' x #' + i.producto_id + ' - ' + i.precio_unitario).join(', ');
             const tr = document.createElement('tr');
 
             const tdId = document.createElement('td');
@@ -105,7 +150,7 @@ class CashierView {
             tr.appendChild(tdId);
 
             const tdItems = document.createElement('td');
-            tdItems.textContent = itemsHtml;
+            tdItems.append(this.renderItemsAgrupados(p.items || []));
             tr.appendChild(tdItems);
 
             const tdTotal = document.createElement('td');
@@ -165,7 +210,10 @@ class CashierView {
         const tbody = document.createElement('tbody');
         pedidosHtml.forEach(tr => tbody.appendChild(tr));
         table.appendChild(tbody);
-        body.appendChild(table);
+        const tableContainer = document.createElement('div');
+        tableContainer.className = 'table-responsive';
+        tableContainer.append(table);
+        body.append(tableContainer);
 
         const totalDiv = document.createElement('div');
         totalDiv.className = 'd-flex justify-content-between align-items-center mb-3';
@@ -192,7 +240,8 @@ class CashierView {
         const actionsDiv = document.createElement('div');
         actionsDiv.className = 'd-grid gap-2';
 
-        if (!tienePago && allEntregados && parseFloat(servicio.total) > 0) {
+        const totalCentavos = this.centavosDe(servicio.total);
+        if (!tienePago && allEntregados && totalCentavos !== null && totalCentavos > 0n) {
             const btnPay = document.createElement('button');
             btnPay.id = 'cashierPay';
             btnPay.type = 'button';
