@@ -55,6 +55,9 @@ const state = {
 
     getCartTotal() {
         const cents = this.getCartTotalCents();
-        return (cents / 100n).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const amount = cents < 0n ? -cents : cents;
+        const units = (amount / 100n).toLocaleString('es-ES');
+        const fraction = (amount % 100n).toString().padStart(2, '0');
+        return `${cents < 0n ? '-' : ''}${units},${fraction}`;
     }
 };

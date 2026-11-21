@@ -54,21 +54,39 @@ function badgeColor(estado) {
     return map[estado] || 'secondary';
 }
 
+const TOAST_COLORS = new Map([
+    ['info', 'info'], ['success', 'success'], ['warning', 'warning'],
+    ['danger', 'danger'], ['error', 'danger']
+]);
+
 function flash(message, type = 'info') {
-    const container = document.getElementById('flashContainer');
-    const div = document.createElement('div');
-    div.className = `flash alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
-    div.textContent = message;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'btn-close';
-    btn.setAttribute('data-bs-dismiss', 'alert');
-    div.appendChild(btn);
-    container.appendChild(div);
-    setTimeout(() => {
-        const bsAlert = bootstrap.Alert.getOrCreateInstance(div);
-        if (bsAlert) bsAlert.close();
-    }, 5000);
+    const variant = TOAST_COLORS.get(type) || 'info';
+    const toast = document.createElement('div');
+    toast.className = `toast text-bg-${variant} border-0`;
+    toast.setAttribute('aria-atomic', 'true');
+
+    const content = document.createElement('div');
+    content.className = 'd-flex align-items-center';
+    const text = document.createElement('div');
+    text.className = 'toast-body';
+    text.textContent = message;
+
+    const close = createButton('', { className: 'btn-close me-2' });
+    if (variant === 'danger') close.classList.add('btn-close-white');
+    close.setAttribute('aria-label', 'Cerrar notificación');
+    close.setAttribute('data-bs-dismiss', 'toast');
+    content.append(text, close);
+    toast.append(content);
+    document.getElementById('toastContainer').append(toast);
+
+    const instance = bootstrap.Toast.getOrCreateInstance(toast, {
+        delay: variant === 'danger' ? 8000 : 5000
+    });
+    toast.addEventListener('hidden.bs.toast', () => {
+        instance.dispose();
+        toast.remove();
+    }, { once: true });
+    instance.show();
 }
 
 function loading(el) {
@@ -88,7 +106,7 @@ function createButton(label, { className = 'btn btn-primary', type = 'button', o
     return button;
 }
 
-function createInputField({ id, name, label, type = 'text', required = false, autofocus = false }) {
+function createInputField({ id, name, label, type = 'text', value = '', options, min, step, required = false, autofocus = false }) {
     const field = document.createElement('div');
     field.className = 'mb-3';
 
@@ -97,11 +115,23 @@ function createInputField({ id, name, label, type = 'text', required = false, au
     labelEl.htmlFor = id;
     labelEl.textContent = label;
 
-    const input = document.createElement('input');
-    input.className = 'form-control';
+    const input = document.createElement(options ? 'select' : 'input');
+    input.className = options ? 'form-select' : 'form-control';
     input.id = id;
     input.name = name;
-    input.type = type;
+    if (options) {
+        for (const [optionValue, optionLabel] of Object.entries(options)) {
+            const option = document.createElement('option');
+            option.value = optionValue;
+            option.textContent = optionLabel;
+            input.append(option);
+        }
+    } else {
+        input.type = type;
+        if (min !== undefined) input.min = min;
+        if (step !== undefined) input.step = step;
+    }
+    input.value = value ?? '';
     input.required = required;
     input.autofocus = autofocus;
 
@@ -141,6 +171,83 @@ function openModal(modal) {
     const instance = bootstrap.Modal.getOrCreateInstance(modal);
     instance.show();
     return instance;
+}
+
+let nextDialogId = 0;
+let activeDialog = null;
+
+function showActionDialog({ title, message, fields = [], acceptLabel = 'Guardar',
+    acceptClass = 'btn btn-primary', canCancel = true }) {
+    if (activeDialog) return Promise.resolve(null);
+
+    const form = document.createElement('form');
+    form.id = `action-dialog-${++nextDialogId}`;
+    if (message) {
+        const text = document.createElement('p');
+        text.className = 'dialog-message mb-0';
+        text.textContent = message;
+        form.append(text);
+    }
+    for (const field of fields) {
+        form.append(createInputField({ ...field, id: `${form.id}-${field.name}` }));
+    }
+
+    const footer = document.createDocumentFragment();
+    const cancel = canCancel ? createButton('Cancelar', { className: 'btn btn-secondary' }) : null;
+    if (cancel) {
+        cancel.setAttribute('data-bs-dismiss', 'modal');
+        footer.append(cancel);
+    }
+    const submit = createButton(acceptLabel, { type: 'submit', className: acceptClass });
+    submit.setAttribute('form', form.id);
+    footer.append(submit);
+    const modal = createModal({ title, body: form, footer });
+    const trigger = document.activeElement;
+    document.body.append(modal);
+    const instance = bootstrap.Modal.getOrCreateInstance(modal);
+    const dialog = { instance, cancelled: false };
+    activeDialog = dialog;
+
+    return new Promise(resolve => {
+        let result = null;
+        let ready = false;
+        modal.addEventListener('shown.bs.modal', () => {
+            ready = true;
+            if (dialog.cancelled) {
+                instance.hide();
+                return;
+            }
+            (form.querySelector('input, select') || cancel || submit).focus();
+        }, { once: true });
+        form.addEventListener('submit', event => {
+            event.preventDefault();
+            if (!ready || dialog.cancelled) return;
+            result = Object.fromEntries(new FormData(form));
+            instance.hide();
+        });
+        modal.addEventListener('hidden.bs.modal', () => {
+            instance.dispose();
+            modal.remove();
+            activeDialog = null;
+            if (trigger?.isConnected) trigger.focus();
+            resolve(dialog.cancelled ? null : result);
+        }, { once: true });
+        instance.show();
+    });
+}
+
+async function confirmAction({ title, message, acceptLabel = 'Confirmar', danger = false }) {
+    const result = await showActionDialog({
+        title, message, acceptLabel, acceptClass: danger ? 'btn btn-danger' : 'btn btn-primary'
+    });
+    return result !== null;
+}
+
+function dismissActionDialog() {
+    if (activeDialog) {
+        activeDialog.cancelled = true;
+        activeDialog.instance.hide();
+    }
 }
 
 function renderTable(container, headers, rows, rowActions = null) {

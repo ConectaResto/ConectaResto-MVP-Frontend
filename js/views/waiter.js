@@ -28,7 +28,7 @@ class WaiterView {
         `;
 
         this.container.querySelectorAll('#waiterTabs button').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('show.bs.tab', (e) => {
                 const target = e.currentTarget.dataset.bsTarget.slice('#waiter'.length).toLowerCase();
                 this.activeTab = target;
                 this.loadTab(target);
@@ -305,7 +305,7 @@ class WaiterView {
             const precio = parseFloat(productoText.split('$')[1] || 0);
 
             if (!productoId || !cantidad || cantidad <= 0) {
-                flash('Seleccione un producto y cantidad v&aacute;lida.', 'danger');
+                flash('Seleccione un producto y cantidad válida.', 'danger');
                 return;
             }
 
@@ -517,7 +517,12 @@ class WaiterView {
         if (!p) return;
         const nombres = new Map(this.productos.map(x => [x.id, x.name]));
         const items = p.items.map(i => i.cantidad + ' x ' + (nombres.get(i.producto_id) || 'Producto #' + i.producto_id)).join('\n');
-        alert('Pedido #' + p.id + '\nEstado: ' + estadoLegible(p.estado) + '\nProductos:\n' + items);
+        await showActionDialog({
+            title: `Pedido #${p.id}`,
+            message: `Estado: ${estadoLegible(p.estado)}\nProductos:\n${items}`,
+            acceptLabel: 'Cerrar',
+            canCancel: false
+        });
     }
 
     removePedidoItem(idx) {

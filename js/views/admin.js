@@ -27,7 +27,7 @@ class AdminView {
         `;
 
         this.container.querySelectorAll('#adminTabs button').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('show.bs.tab', (e) => {
                 const target = e.currentTarget.dataset.bsTarget.slice('#admin'.length).toLowerCase();
                 this.currentSection = target;
                 this.loadSection(target);
@@ -105,7 +105,7 @@ class AdminView {
         const estado = estadoSelect.value;
 
         if (!numero) {
-            flash('Ingrese un n&uacute;mero v&aacute;lido.', 'danger');
+            flash('Ingrese un número válido.', 'danger');
             return;
         }
 
@@ -120,13 +120,17 @@ class AdminView {
     }
 
     async editMesa(id, numero, estado) {
-        const n = prompt('N&uacute;mero de mesa:', numero);
-        if (n === null) return;
-        const e = prompt('Estado (DISPONIBLE/OCUPADA/CERRADA):', estado);
-        if (e === null) return;
+        const values = await showActionDialog({
+            title: 'Editar mesa',
+            fields: [
+                { name: 'numero', label: 'Número de mesa', type: 'number', value: numero, min: 1, required: true },
+                { name: 'estado', label: 'Estado', value: estado, options: ESTADOS_MESA, required: true }
+            ]
+        });
+        if (!values) return;
 
         try {
-            await api.patch(`/admin/mesas/${id}`, { numero: parseInt(n), estado: e });
+            await api.patch(`/admin/mesas/${id}`, { numero: parseInt(values.numero, 10), estado: values.estado });
             flash('Mesa actualizada.', 'success');
             this.loadSection('mesas');
         } catch (err) {
@@ -227,7 +231,7 @@ class AdminView {
         if (!name) { flash('Nombre requerido.', 'danger'); return; }
         try {
             await api.post('/categories', { name, description: desc });
-            flash('Categor&iacute;a creada.', 'success');
+            flash('Categoría creada.', 'success');
             this.container.querySelector('#adminCatName').value = '';
             this.container.querySelector('#adminCatDesc').value = '';
             this.loadSection('categorias');
@@ -235,22 +239,29 @@ class AdminView {
     }
 
     async editCategoria(id, name, desc) {
-        const n = prompt('Nombre:', name);
-        if (n === null) return;
-        const d = prompt('Descripci&oacute;n:', desc);
-        if (d === null) return;
+        const values = await showActionDialog({
+            title: 'Editar categoría',
+            fields: [
+                { name: 'name', label: 'Nombre', value: name, required: true },
+                { name: 'description', label: 'Descripción', value: desc }
+            ]
+        });
+        if (!values) return;
+
         try {
-            await api.patch(`/categories/${id}`, { name: n, description: d });
-            flash('Categor&iacute;a actualizada.', 'success');
+            await api.patch(`/categories/${id}`, values);
+            flash('Categoría actualizada.', 'success');
             this.loadSection('categorias');
         } catch (err) { flash(err.message, 'danger'); }
     }
 
     async deleteCategoria(id) {
-        if (!confirm('¿Desactivar esta categor&iacute;a?')) return;
+        if (!await confirmAction({
+            title: 'Desactivar categoría', message: '¿Desactivar esta categoría?', acceptLabel: 'Desactivar', danger: true
+        })) return;
         try {
             await api.del(`/categories/${id}`);
-            flash('Categor&iacute;a desactivada.', 'success');
+            flash('Categoría desactivada.', 'success');
             this.loadSection('categorias');
         } catch (err) { flash(err.message, 'danger'); }
     }
@@ -363,7 +374,7 @@ class AdminView {
             categoria_id: parseInt(this.container.querySelector('#adminProdCat').value),
             is_available: true
         };
-        if (!data.name || !data.categoria_id) { flash('Nombre y categor&iacute;a requeridos.', 'danger'); return; }
+        if (!data.name || !data.categoria_id) { flash('Nombre y categoría requeridos.', 'danger'); return; }
         try {
             await api.post('/products', data);
             flash('Producto creado.', 'success');
@@ -372,21 +383,27 @@ class AdminView {
     }
 
     async editProducto(id, name, desc, price, catId, isAvailable) {
-        const n = prompt('Nombre:', name);
-        if (n === null) return;
-        const d = prompt('Descripci&oacute;n:', desc);
-        if (d === null) return;
-        const p = prompt('Precio:', price);
-        if (p === null) return;
+        const values = await showActionDialog({
+            title: 'Editar producto',
+            fields: [
+                { name: 'name', label: 'Nombre', value: name, required: true },
+                { name: 'description', label: 'Descripción', value: desc },
+                { name: 'price', label: 'Precio', type: 'number', value: price, step: 'any', required: true }
+            ]
+        });
+        if (!values) return;
+
         try {
-            await api.patch(`/products/${id}`, { name: n, description: d, price: p });
+            await api.patch(`/products/${id}`, values);
             flash('Producto actualizado.', 'success');
             this.loadSection('productos');
         } catch (err) { flash(err.message, 'danger'); }
     }
 
     async deleteProducto(id) {
-        if (!confirm('¿Desactivar este producto?')) return;
+        if (!await confirmAction({
+            title: 'Desactivar producto', message: '¿Desactivar este producto?', acceptLabel: 'Desactivar', danger: true
+        })) return;
         try {
             await api.del(`/products/${id}`);
             flash('Producto desactivado.', 'success');
@@ -511,21 +528,29 @@ class AdminView {
     }
 
     async editUsuario(id, username, email, rol, isActive) {
-        const u = prompt('Usuario:', username);
-        if (u === null) return;
-        const e = prompt('Correo:', email);
-        if (e === null) return;
-        const r = prompt('Rol (ADMIN/WAITER/KITCHEN/CASHIER):', rol);
-        if (r === null) return;
+        const values = await showActionDialog({
+            title: 'Editar usuario',
+            fields: [
+                { name: 'username', label: 'Usuario', value: username, required: true },
+                { name: 'email', label: 'Correo', type: 'email', value: email, required: true },
+                { name: 'rol', label: 'Rol', value: rol, required: true, options: {
+                    ADMIN: 'Administrador', WAITER: 'Mesero', KITCHEN: 'Cocina', CASHIER: 'Caja'
+                } }
+            ]
+        });
+        if (!values) return;
+
         try {
-            await api.patch(`/users/${id}`, { username: u, email: e, rol: r });
+            await api.patch(`/users/${id}`, values);
             flash('Usuario actualizado.', 'success');
             this.loadSection('usuarios');
         } catch (err) { flash(err.message, 'danger'); }
     }
 
     async deleteUsuario(id) {
-        if (!confirm('¿Desactivar este usuario?')) return;
+        if (!await confirmAction({
+            title: 'Desactivar usuario', message: '¿Desactivar este usuario?', acceptLabel: 'Desactivar', danger: true
+        })) return;
         try {
             await api.del(`/users/${id}`);
             flash('Usuario desactivado.', 'success');

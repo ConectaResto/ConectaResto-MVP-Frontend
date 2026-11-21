@@ -246,7 +246,12 @@ class CashierView {
     }
 
     async cerrarServicio(serviceId) {
-        if (!confirm('¿Est&aacute; seguro de cerrar este servicio?')) return;
+        if (!await confirmAction({
+            title: 'Cerrar servicio',
+            message: '¿Está seguro de cerrar este servicio?',
+            acceptLabel: 'Cerrar servicio',
+            danger: true
+        })) return;
         try {
             const data = await api.post(`/servicios/${serviceId}/cerrar`, {});
             flash(`Servicio cerrado. Mesa ${data.data.mesa_id} disponible.`, 'success');
