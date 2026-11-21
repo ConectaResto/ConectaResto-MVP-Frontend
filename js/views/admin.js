@@ -2,6 +2,7 @@ class AdminView {
     constructor(container) {
         this.container = container;
         this.currentSection = 'mesas';
+        this.recordFilters = new Map();
     }
 
     async init() {
@@ -53,28 +54,55 @@ class AdminView {
         }
     }
 
-    renderSection(container, { title, bodyId, headers, items, cells, add, actions }) {
+    renderSection(container, { title, bodyId, headers, items, cells, add, actions, filterable = false }) {
         const header = document.createElement('div');
         header.className = 'd-flex flex-wrap align-items-center justify-content-between gap-2 mb-3';
         const heading = document.createElement('h5');
         heading.className = 'mb-0';
         heading.textContent = title;
-        header.append(heading, createButton('Agregar', { onClick: add }));
+        header.append(heading);
+        const addButton = createButton('Agregar', { onClick: add });
 
         const tableContainer = document.createElement('div');
         tableContainer.className = 'table-responsive';
-        const table = renderTable(tableContainer, headers, items.map(cells),
-            (row, index) => this.renderActions(row[0], actions(items[index])));
-        const body = table.tBodies[0];
-        body.id = bodyId;
-        if (!items.length) {
-            const cell = body.insertRow().insertCell();
-            cell.colSpan = headers.length;
-            cell.className = 'text-muted text-center';
-            cell.textContent = 'No hay registros.';
+        const renderRows = () => {
+            const status = this.recordFilters.get(bodyId) ?? 'activos';
+            const visible = filterable ? items.filter(item => item.is_active === (status === 'activos')) : items;
+            this.disposeActions(tableContainer);
+            const table = renderTable(tableContainer, headers, visible.map(cells),
+                (row, index) => this.renderActions(row[0], actions(visible[index])));
+            const body = table.tBodies[0];
+            body.id = bodyId;
+            if (!visible.length) {
+                const cell = body.insertRow().insertCell();
+                cell.colSpan = headers.length;
+                cell.className = 'text-muted text-center';
+                cell.textContent = filterable ? `No hay registros ${status}.` : 'No hay registros.';
+            }
+        };
+
+        if (filterable) {
+            const controls = document.createElement('div');
+            controls.className = 'd-flex flex-wrap align-items-end gap-2';
+            const filter = createInputField({
+                id: `${bodyId}Filter`, name: 'estado', label: 'Mostrar registros',
+                options: { activos: 'Activos', inactivos: 'Inactivos' },
+                value: this.recordFilters.get(bodyId) ?? 'activos'
+            });
+            filter.classList.remove('mb-3');
+            filter.querySelector('select').addEventListener('change', event => {
+                this.recordFilters.set(bodyId, event.currentTarget.value);
+                renderRows();
+            });
+            controls.append(filter, addButton);
+            header.append(controls);
+        } else {
+            header.append(addButton);
         }
+
         this.disposeActions(container);
         container.replaceChildren(header, tableContainer);
+        renderRows();
     }
 
     renderActions(recordLabel, actions) {
@@ -217,6 +245,7 @@ class AdminView {
         this.renderSection(container, {
             title: 'Categorías',
             bodyId: 'adminCategoriasBody',
+            filterable: true,
             headers: ['Nombre', 'Descripción', 'Estado', 'Acciones'],
             items: categorias,
             cells: categoria => [
@@ -232,7 +261,7 @@ class AdminView {
                 })],
                 ...(categoria.is_active ? [
                     ['Editar', 'secondary', () => this.saveCategoria(categoria)],
-                    ['Desactivar', 'danger', () => this.desactivarCategoria(categoria.id)]
+                    ['Eliminar', 'danger', () => this.desactivarCategoria(categoria.id)]
                 ] : [
                     ['Reactivar', 'success', () => this.reactivarCategoria(categoria.id)]
                 ])
@@ -258,13 +287,20 @@ class AdminView {
         });
     }
 
+    confirmarEliminacionLogica(entidad) {
+        return confirmAction({
+            title: `Eliminar ${entidad}`,
+            message: 'El registro seguirá guardado en MySQL como inactivo y podrá reactivarse desde el filtro Inactivos.',
+            acceptLabel: 'Eliminar',
+            danger: true
+        });
+    }
+
     async desactivarCategoria(id) {
-        if (!await confirmAction({
-            title: 'Desactivar categoría', message: '¿Desactivar esta categoría?', acceptLabel: 'Desactivar', danger: true
-        })) return;
+        if (!await this.confirmarEliminacionLogica('categoría')) return;
         try {
             await api.del(`/categories/${id}`);
-            flash('Categoría desactivada.', 'success');
+            flash('Categoría eliminada. Puede reactivarla desde Inactivos.', 'success');
             this.loadSection('categorias');
         } catch (err) { flash(err.message, 'danger'); }
     }
@@ -287,6 +323,7 @@ class AdminView {
         this.renderSection(container, {
             title: 'Productos',
             bodyId: 'adminProductosBody',
+            filterable: true,
             headers: ['Nombre', 'Categoría', 'Precio', 'Disponible', 'Activo', 'Acciones'],
             items: products.data || [],
             cells: producto => [
@@ -306,7 +343,7 @@ class AdminView {
                 })],
                 ...(producto.is_active ? [
                     ['Editar', 'secondary', () => this.saveProducto(producto, categorias)],
-                    ['Desactivar', 'danger', () => this.desactivarProducto(producto.id)]
+                    ['Eliminar', 'danger', () => this.desactivarProducto(producto.id)]
                 ] : [
                     ['Reactivar', 'success', () => this.reactivarProducto(producto.id)]
                 ])
@@ -350,12 +387,10 @@ class AdminView {
     }
 
     async desactivarProducto(id) {
-        if (!await confirmAction({
-            title: 'Desactivar producto', message: '¿Desactivar este producto?', acceptLabel: 'Desactivar', danger: true
-        })) return;
+        if (!await this.confirmarEliminacionLogica('producto')) return;
         try {
             await api.del(`/products/${id}`);
-            flash('Producto desactivado.', 'success');
+            flash('Producto eliminado. Puede reactivarlo desde Inactivos.', 'success');
             this.loadSection('productos');
         } catch (err) { flash(err.message, 'danger'); }
     }
@@ -373,6 +408,7 @@ class AdminView {
         this.renderSection(container, {
             title: 'Usuarios',
             bodyId: 'adminUsuariosBody',
+            filterable: true,
             headers: ['Usuario', 'Correo', 'Rol', 'Estado', 'Acciones'],
             items: data?.users || data || [],
             cells: usuario => [
@@ -389,7 +425,7 @@ class AdminView {
                 })],
                 ['Editar', 'secondary', () => this.saveUsuario(usuario)],
                 usuario.is_active
-                    ? ['Desactivar', 'danger', () => this.desactivarUsuario(usuario.id)]
+                    ? ['Eliminar', 'danger', () => this.desactivarUsuario(usuario.id)]
                     : ['Reactivar', 'success', () => this.reactivarUsuario(usuario.id)]
             ]
         });
@@ -419,12 +455,10 @@ class AdminView {
     }
 
     async desactivarUsuario(id) {
-        if (!await confirmAction({
-            title: 'Desactivar usuario', message: '¿Desactivar este usuario?', acceptLabel: 'Desactivar', danger: true
-        })) return;
+        if (!await this.confirmarEliminacionLogica('usuario')) return;
         try {
             await api.del(`/users/${id}`);
-            flash('Usuario desactivado.', 'success');
+            flash('Usuario eliminado. Puede reactivarlo desde Inactivos.', 'success');
             this.loadSection('usuarios');
         } catch (err) { flash(err.message, 'danger'); }
     }
