@@ -79,6 +79,70 @@ function formatMoney(cents) {
     return (cents / 100).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function createButton(label, { className = 'btn btn-primary', type = 'button', onClick } = {}) {
+    const button = document.createElement('button');
+    button.type = type;
+    button.className = className;
+    button.textContent = label;
+    if (onClick) button.addEventListener('click', onClick);
+    return button;
+}
+
+function createInputField({ id, name, label, type = 'text', required = false, autofocus = false }) {
+    const field = document.createElement('div');
+    field.className = 'mb-3';
+
+    const labelEl = document.createElement('label');
+    labelEl.className = 'form-label';
+    labelEl.htmlFor = id;
+    labelEl.textContent = label;
+
+    const input = document.createElement('input');
+    input.className = 'form-control';
+    input.id = id;
+    input.name = name;
+    input.type = type;
+    input.required = required;
+    input.autofocus = autofocus;
+
+    field.append(labelEl, input);
+    return field;
+}
+
+function createModal({ title, body, footer }) {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.tabIndex = -1;
+    modal.setAttribute('aria-hidden', 'true');
+    modal.setAttribute('aria-label', title);
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer"></div>
+            </div>
+        </div>
+    `;
+    modal.querySelector('.modal-title').textContent = title;
+    modal.querySelector('.modal-body').append(body);
+    if (!footer) {
+        footer = createButton('Cerrar', { className: 'btn btn-secondary' });
+        footer.setAttribute('data-bs-dismiss', 'modal');
+    }
+    modal.querySelector('.modal-footer').append(footer);
+    return modal;
+}
+
+function openModal(modal) {
+    const instance = bootstrap.Modal.getOrCreateInstance(modal);
+    instance.show();
+    return instance;
+}
+
 function renderTable(container, headers, rows, rowActions = null) {
     const table = document.createElement('table');
     table.className = 'table table-striped table-hover align-middle';
@@ -93,21 +157,25 @@ function renderTable(container, headers, rows, rowActions = null) {
     thead.appendChild(headerRow);
     table.appendChild(thead);
     const tbody = document.createElement('tbody');
-    rows.forEach(row => {
+    rows.forEach((row, index) => {
         const tr = document.createElement('tr');
         row.forEach(cell => {
             const td = document.createElement('td');
-            td.textContent = cell;
+            if (cell instanceof Node) td.append(cell);
+            else td.textContent = cell;
             tr.appendChild(td);
         });
         if (rowActions) {
             const td = document.createElement('td');
-            td.innerHTML = rowActions(row);
+            // Action strings are literal text. Interactive actions must be DOM nodes.
+            const action = rowActions(row, index);
+            if (action instanceof Node) td.append(action);
+            else td.textContent = action ?? '';
             tr.appendChild(td);
         }
         tbody.appendChild(tr);
     });
     table.appendChild(tbody);
-    container.innerHTML = '';
-    container.appendChild(table);
+    container.replaceChildren(table);
+    return table;
 }

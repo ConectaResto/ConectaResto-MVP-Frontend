@@ -28,7 +28,7 @@ class AdminView {
 
         this.container.querySelectorAll('#adminTabs button').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const target = e.target.dataset.bsTarget.replace('#', '');
+                const target = e.currentTarget.dataset.bsTarget.slice('#admin'.length).toLowerCase();
                 this.currentSection = target;
                 this.loadSection(target);
             });
@@ -72,49 +72,28 @@ class AdminView {
                     <button id="adminMesaCreate" class="btn btn-primary w-100">Crear mesa</button>
                 </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
-                    <thead><tr><th>N&uacute;mero</th><th>Estado</th><th>QR</th><th>Acciones</th></tr></thead>
-                    <tbody id="adminMesasBody"></tbody>
-                </table>
-            </div>
+            <div class="table-responsive" id="adminMesasTable"></div>
         `;
 
-        const tbody = container.querySelector('#adminMesasBody');
-        mesas.forEach(m => {
-            const tr = document.createElement('tr');
-
-            const tdNumero = document.createElement('td');
-            tdNumero.textContent = 'Mesa ' + m.numero;
-            tr.appendChild(tdNumero);
-
-            const tdEstado = document.createElement('td');
+        const rows = mesas.map(mesa => {
             const badge = document.createElement('span');
-            badge.className = 'badge bg-' + badgeColor(m.estado);
-            badge.textContent = estadoLegible(m.estado);
-            tdEstado.appendChild(badge);
-            tr.appendChild(tdEstado);
-
-            const tdQr = document.createElement('td');
-            const btnQr = document.createElement('button');
-            btnQr.type = 'button';
-            btnQr.className = 'btn btn-sm btn-outline-primary';
-            btnQr.textContent = 'Ver QR';
-            btnQr.addEventListener('click', () => this.verQr(m.id));
-            tdQr.appendChild(btnQr);
-            tr.appendChild(tdQr);
-
-            const tdAcciones = document.createElement('td');
-            const btnEdit = document.createElement('button');
-            btnEdit.type = 'button';
-            btnEdit.className = 'btn btn-sm btn-outline-secondary';
-            btnEdit.textContent = 'Editar';
-            btnEdit.addEventListener('click', () => this.editMesa(m.id, m.numero, m.estado));
-            tdAcciones.appendChild(btnEdit);
-            tr.appendChild(tdAcciones);
-
-            tbody.appendChild(tr);
+            badge.className = 'badge bg-' + badgeColor(mesa.estado);
+            badge.textContent = estadoLegible(mesa.estado);
+            const qr = createButton('Ver QR', {
+                className: 'btn btn-sm btn-outline-primary',
+                onClick: () => this.verQr(mesa.id)
+            });
+            return ['Mesa ' + mesa.numero, badge, qr];
         });
+        const table = renderTable(container.querySelector('#adminMesasTable'),
+            ['Número', 'Estado', 'QR', 'Acciones'], rows, (_, index) => {
+                const mesa = mesas[index];
+                return createButton('Editar', {
+                    className: 'btn btn-sm btn-outline-secondary',
+                    onClick: () => this.editMesa(mesa.id, mesa.numero, mesa.estado)
+                });
+            });
+        table.tBodies[0].id = 'adminMesasBody';
 
         this.container.querySelector('#adminMesaCreate').addEventListener('click', () => this.crearMesa());
     }
@@ -165,33 +144,19 @@ class AdminView {
             const url = URL.createObjectURL(blob);
             const img = document.createElement('img');
             img.src = url;
-            img.style.maxWidth = '200px';
-            img.style.border = '1px solid #dee2e6';
-            img.style.borderRadius = '0.25rem';
-            const modal = document.createElement('div');
-            modal.className = 'modal fade';
-            modal.innerHTML = `
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header bg-dark text-white">
-                            <h5 class="modal-title">QR Mesa</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body text-center"></div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            modal.querySelector('.modal-body').appendChild(img);
-            document.body.appendChild(modal);
-            const bsModal = new bootstrap.Modal(modal);
-            bsModal.show();
+            img.alt = 'Código QR de la mesa';
+            img.className = 'qr-image';
+            const body = document.createElement('div');
+            body.className = 'text-center';
+            body.append(img);
+            const modal = createModal({ title: 'QR Mesa', body });
+            document.body.append(modal);
+            const instance = openModal(modal);
             modal.addEventListener('hidden.bs.modal', () => {
+                instance.dispose();
                 URL.revokeObjectURL(url);
-                document.body.removeChild(modal);
-            });
+                modal.remove();
+            }, { once: true });
         } catch (err) {
             flash(err.message, 'danger');
         }
