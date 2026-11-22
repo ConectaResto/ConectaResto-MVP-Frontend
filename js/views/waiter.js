@@ -335,21 +335,16 @@ class WaiterView {
 
     async loadPedidosData() {
         try {
-            const [pedidosRes, serviciosRes, productosRes, mesasRes] = await Promise.all([
+            const [pedidosRes, serviciosRes, productosRes] = await Promise.all([
                 api.get('/pedidos'),
                 api.get('/servicios'),
-                api.get('/products'),
-                api.get('/mesas').catch(() => {
-                    flash('No se pudieron consultar los números de mesa.', 'warning');
-                    return null;
-                })
+                api.get('/products')
             ]);
             this.pedidos = pedidosRes.data || [];
             this.servicios = serviciosRes.data || [];
             this.productos = (productosRes.data || []).filter(p => p.is_active !== false);
-            const numeros = new Map((mesasRes?.data || []).map(mesa => [mesa.id, mesa.numero]));
             this.mesasPorServicio = new Map(this.servicios.map(servicio => [
-                servicio.id, numeros.get(servicio.mesa_id)
+                servicio.id, servicio.mesa_numero
             ]));
         } catch (err) {
             this.pedidos = [];
