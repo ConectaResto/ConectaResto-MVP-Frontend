@@ -39,10 +39,13 @@ class KitchenView {
                 const preparacion = document.createElement('span');
                 preparacion.className = `badge text-bg-${badgeColor(pedido.estado_preparacion)}`;
                 preparacion.textContent = estadoLegible(pedido.estado_preparacion);
-                return [
-                    `#${pedido.id}`, `#${pedido.servicio_id}`,
-                    this.productosAgrupados(pedido.items || [], nombres), preparacion
-                ];
+                const productos = createButton('Ver productos', {
+                    className: 'btn btn-sm btn-outline-secondary',
+                    onClick: event => this.verProductos(pedido, nombres, event.currentTarget)
+                });
+                productos.setAttribute('aria-haspopup', 'dialog');
+                productos.setAttribute('aria-label', `Ver productos del pedido #${pedido.id}`);
+                return [`#${pedido.id}`, `#${pedido.servicio_id}`, productos, preparacion];
             });
 
             const table = renderTable(container, headers, rows, (_, index) => {
@@ -81,7 +84,37 @@ class KitchenView {
         }
         return Array.from(cantidades, ([id, cantidad]) =>
             `${cantidad} x ${nombres.get(id) ?? `Producto #${id}`}`
-        ).join(', ') || 'Sin productos válidos.';
+        );
+    }
+
+    verProductos(pedido, nombres, trigger) {
+        if (document.getElementById('kitchenProductsModal')) return;
+
+        const productos = this.productosAgrupados(pedido.items || [], nombres);
+        const body = document.createElement(productos.length ? 'ul' : 'p');
+        if (productos.length) {
+            body.className = 'list-group list-group-flush mb-0';
+            for (const producto of productos) {
+                const item = document.createElement('li');
+                item.className = 'list-group-item text-break px-0';
+                item.textContent = producto;
+                body.append(item);
+            }
+        } else {
+            body.className = 'text-muted mb-0';
+            body.textContent = 'Sin productos válidos.';
+        }
+
+        const modal = createModal({ title: `Productos del pedido #${pedido.id}`, body });
+        modal.id = 'kitchenProductsModal';
+        modal.querySelector('.modal-dialog').classList.add('modal-dialog-scrollable');
+        document.body.append(modal);
+        const instance = openModal(modal);
+        modal.addEventListener('hidden.bs.modal', () => {
+            instance.dispose();
+            modal.remove();
+            if (trigger.isConnected) trigger.focus();
+        }, { once: true });
     }
 
     async cambiarPreparacion(pedidoId, nuevoEstado) {
@@ -94,7 +127,14 @@ class KitchenView {
         }
     }
 
-    destroy() {}
+    destroy() {
+        const modal = document.getElementById('kitchenProductsModal');
+        if (!modal) return;
+        const instance = bootstrap.Modal.getInstance(modal);
+        // Bootstrap ignora hide() durante la apertura.
+        modal.addEventListener('shown.bs.modal', () => instance.hide(), { once: true });
+        instance.hide();
+    }
 }
 
 window.appKitchen = null;
