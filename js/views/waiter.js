@@ -163,8 +163,10 @@ class WaiterView {
 
         const wrapper = document.createElement('div');
         wrapper.className = 'table-responsive';
+        const numeros = new Map(this.mesas.map(mesa => [mesa.id, mesa.numero]));
         const rows = activos.map(servicio => [
-            `#${servicio.id}`, `Mesa ${servicio.mesa_id}`, this.renderStateBadge(servicio.estado), servicio.total
+            `#${servicio.id}`, this.nombreMesa(numeros.get(servicio.mesa_id)),
+            this.renderStateBadge(servicio.estado), servicio.total
         ]);
         const table = renderTable(wrapper, ['Servicio', 'Mesa', 'Estado', 'Total'], rows);
         table.className = 'table table-sm align-middle';
@@ -205,7 +207,7 @@ class WaiterView {
         }
 
         const options = Object.fromEntries(servicios.map(servicio => [
-            servicio.id, `Mesa ${servicio.mesa_id} (Servicio #${servicio.id})`
+            servicio.id, this.nombreMesa(this.mesasPorServicio.get(servicio.id))
         ]));
         const productos = new Map(this.productos.map(producto => [producto.id, producto]));
         const items = [];
@@ -352,9 +354,8 @@ class WaiterView {
         }
     }
 
-    mesaDelPedido(pedido) {
-        const numero = this.mesasPorServicio.get(pedido.servicio_id);
-        return numero === undefined ? 'Mesa sin identificar' : `Mesa ${numero}`;
+    nombreMesa(numero) {
+        return Number.isInteger(numero) && numero > 0 ? `Mesa ${numero}` : 'Mesa sin identificar';
     }
 
     productosDelPedido(pedido, nombres) {
@@ -400,7 +401,7 @@ class WaiterView {
         headers.push('Total', 'Acciones');
         const rows = pedidos.map(pedido => {
             const row = [
-                this.mesaDelPedido(pedido),
+                this.nombreMesa(this.mesasPorServicio.get(pedido.servicio_id)),
                 this.productosDelPedido(pedido, nombres).join(', '),
                 this.renderStateBadge(pedido.estado)
             ];
@@ -515,7 +516,8 @@ class WaiterView {
         if (!pedido) return;
         const nombres = new Map(this.productos.map(producto => [producto.id, producto.name]));
         const estado = pedido.estado === 'CANCELADO' ? 'Cancelado' : estadoLegible(pedido.estado);
-        const lines = [this.mesaDelPedido(pedido), `Estado: ${estado}`];
+        const mesa = this.nombreMesa(this.mesasPorServicio.get(pedido.servicio_id));
+        const lines = [mesa, `Estado: ${estado}`];
         if (pedido.estado !== 'ENTREGADO') lines.push(`Preparación: ${estadoLegible(pedido.estado_preparacion)}`);
         lines.push(`Total: $${pedido.total}`, '', 'Productos:', ...this.productosDelPedido(pedido, nombres));
         await showActionDialog({
