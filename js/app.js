@@ -174,6 +174,7 @@ function initRouter() {
     initRoleNav();
     const logoutBtn = document.getElementById('navLogout');
     if (logoutBtn) {
+        addButtonIcon(logoutBtn, 'logOut');
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             logout();

@@ -241,44 +241,25 @@ class CashierView {
         actionsDiv.className = 'd-grid gap-2';
 
         const totalCentavos = this.centavosDe(servicio.total);
-        if (pedidosFinalizados && !tienePago && totalCentavos !== null && totalCentavos > 0n) {
-            const btnPay = document.createElement('button');
-            btnPay.id = 'cashierPay';
-            btnPay.type = 'button';
-            btnPay.className = 'btn btn-success';
-            btnPay.textContent = 'Registrar pago simulado';
-            btnPay.addEventListener('click', () => this.registrarPago(servicio.id));
-            actionsDiv.appendChild(btnPay);
-        } else {
-            const btnPay = document.createElement('button');
-            btnPay.id = 'cashierPay';
-            btnPay.type = 'button';
-            btnPay.className = 'btn btn-success';
-            btnPay.textContent = 'Registrar pago simulado';
-            btnPay.disabled = true;
-            actionsDiv.appendChild(btnPay);
-        }
+        const puedePagar = pedidosFinalizados && !tienePago && totalCentavos !== null && totalCentavos > 0n;
+        const btnPay = createButton('Registrar pago simulado', {
+            className: 'btn btn-success', icon: 'card',
+            onClick: puedePagar ? () => this.registrarPago(servicio.id) : undefined
+        });
+        btnPay.id = 'cashierPay';
+        btnPay.disabled = !puedePagar;
+        actionsDiv.appendChild(btnPay);
 
         const puedeCerrar = pedidosFinalizados && totalCentavos !== null && (tienePago
             ? this.centavosDe(servicio.pago.importe) === totalCentavos
             : totalCentavos === 0n);
-        if (puedeCerrar) {
-            const btnClose = document.createElement('button');
-            btnClose.id = 'cashierClose';
-            btnClose.type = 'button';
-            btnClose.className = 'btn btn-danger';
-            btnClose.textContent = 'Cerrar servicio';
-            btnClose.addEventListener('click', () => this.cerrarServicio(servicio.id));
-            actionsDiv.appendChild(btnClose);
-        } else {
-            const btnClose = document.createElement('button');
-            btnClose.id = 'cashierClose';
-            btnClose.type = 'button';
-            btnClose.className = 'btn btn-danger';
-            btnClose.textContent = 'Cerrar servicio';
-            btnClose.disabled = true;
-            actionsDiv.appendChild(btnClose);
-        }
+        const btnClose = createButton('Cerrar servicio', {
+            className: 'btn btn-danger', icon: 'lock',
+            onClick: puedeCerrar ? () => this.cerrarServicio(servicio.id) : undefined
+        });
+        btnClose.id = 'cashierClose';
+        btnClose.disabled = !puedeCerrar;
+        actionsDiv.appendChild(btnClose);
 
         body.appendChild(actionsDiv);
         card.appendChild(body);
@@ -302,6 +283,7 @@ class CashierView {
             title: 'Cerrar servicio',
             message: '¿Está seguro de cerrar este servicio?',
             acceptLabel: 'Cerrar servicio',
+            acceptIcon: 'lock',
             danger: true
         })) return;
         try {

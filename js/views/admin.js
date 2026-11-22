@@ -55,7 +55,7 @@ class AdminView {
         heading.className = 'mb-0';
         heading.textContent = title;
         header.append(heading);
-        const addButton = createButton('Agregar', { onClick: add });
+        const addButton = createButton('Agregar', { icon: 'plus', onClick: add });
 
         const tableContainer = document.createElement('div');
         tableContainer.className = 'table-responsive';
@@ -154,9 +154,11 @@ class AdminView {
             boundary: document.body,
             popperConfig: defaults => ({ ...defaults, strategy: 'fixed' })
         });
+        const icons = { 'Ver detalles': 'eye', Editar: 'pencil', Eliminar: 'trash', Reactivar: 'reactivate' };
         for (const [label, variant, onClick] of actions) {
             const item = document.createElement('li');
             item.append(createButton(label, {
+                icon: icons[label],
                 className: variant === 'danger' ? 'dropdown-item text-danger' : 'dropdown-item',
                 onClick: () => {
                     dropdown.hide();
@@ -182,6 +184,7 @@ class AdminView {
             title,
             message: Object.entries(fields).map(([label, value]) => `${label}: ${value ?? '—'}`).join('\n'),
             acceptLabel: 'Cerrar',
+            acceptIcon: 'close',
             canCancel: false
         });
     }
@@ -216,6 +219,7 @@ class AdminView {
                 `Mesa ${mesa.numero}`,
                 this.badge(estadoLegible(mesa.estado), badgeColor(mesa.estado)),
                 createButton('Ver QR', {
+                    icon: 'qr',
                     className: 'btn btn-sm btn-outline-primary',
                     onClick: () => this.verQr(mesa.id)
                 })
@@ -326,6 +330,7 @@ class AdminView {
             title: `Eliminar ${entidad}`,
             message: 'El registro seguirá guardado en MySQL como inactivo y podrá reactivarse desde el filtro Inactivos.',
             acceptLabel: 'Eliminar',
+            acceptIcon: 'trash',
             danger: true
         });
     }

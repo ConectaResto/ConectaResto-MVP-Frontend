@@ -173,11 +173,10 @@ class PublicView {
         price.className = 'fw-bold';
         price.textContent = formatMoney(cents);
 
-        const addBtn = document.createElement('button');
-        addBtn.type = 'button';
-        addBtn.className = 'btn btn-primary btn-sm';
-        addBtn.textContent = 'Agregar';
-        addBtn.addEventListener('click', () => this.addToCart(p.id));
+        const addBtn = createButton('Agregar', {
+            className: 'btn btn-primary btn-sm', icon: 'plus',
+            onClick: () => this.addToCart(p.id)
+        });
 
         flex.appendChild(price);
         flex.appendChild(addBtn);
@@ -232,7 +231,6 @@ class PublicView {
                         <p class="text-muted small mb-2">Los precios se validan al enviar. No se realiza pago aquí.</p>
                         <p id="publicCartError" class="alert alert-danger" role="alert" hidden></p>
                         <p id="publicOrderStatus" class="alert alert-success" role="status" tabindex="-1" hidden></p>
-                        <button id="publicCheckoutBtn" type="submit" class="btn btn-success w-100">Confirmar pedido</button>
                     </fieldset>
                 </form>
             </div>
@@ -240,11 +238,17 @@ class PublicView {
         const title = this.cartScreen.querySelector('#publicCartTitle');
         title.querySelector('span').textContent = this.mesaNumero;
         const back = createButton('Volver al menú', {
-            className: 'btn btn-outline-secondary', onClick: () => this.showMenu()
+            className: 'btn btn-outline-secondary', icon: 'arrowLeft', onClick: () => this.showMenu()
         });
         back.id = 'publicBackToMenu';
         this.cartScreen.querySelector('#publicCartNavigation').append(back);
-        this.cartScreen.querySelector('#publicCartForm').addEventListener('submit', event => {
+        const form = this.cartScreen.querySelector('#publicCartForm');
+        const checkout = createButton('Confirmar pedido', {
+            type: 'submit', className: 'btn btn-success w-100', icon: 'check'
+        });
+        checkout.id = 'publicCheckoutBtn';
+        form.querySelector('fieldset').append(checkout);
+        form.addEventListener('submit', event => {
             event.preventDefault();
             this.sendOrder();
         });
@@ -338,6 +342,7 @@ class PublicView {
         });
 
         const remove = createButton('Quitar', {
+            icon: 'minus',
             className: 'btn btn-sm btn-outline-danger public-cart-remove',
             onClick: () => this.removeFromCart(item.id)
         });
@@ -365,7 +370,7 @@ class PublicView {
         const submittedCart = [...state.cart.values()];
         const items = submittedCart.map(item => ({ producto_id: item.id, cantidad: item.quantity }));
         const fields = form.querySelector('fieldset');
-        const button = form.querySelector('#publicCheckoutBtn');
+        const label = form.querySelector('#publicCheckoutBtn').lastChild;
         const back = this.cartScreen.querySelector('#publicBackToMenu');
         const error = form.querySelector('#publicCartError');
         const status = form.querySelector('#publicOrderStatus');
@@ -375,7 +380,7 @@ class PublicView {
         fields.disabled = true;
         back.disabled = true;
         form.setAttribute('aria-busy', 'true');
-        button.textContent = 'Enviando…';
+        label.textContent = 'Enviando…';
         this.updateCartSummary();
 
         try {
@@ -406,7 +411,7 @@ class PublicView {
                 fields.disabled = false;
                 back.disabled = false;
                 form.removeAttribute('aria-busy');
-                button.textContent = 'Confirmar pedido';
+                label.textContent = 'Confirmar pedido';
                 this.updateCartSummary();
             } else if (window.appPublic?.menuScreen?.isConnected) {
                 window.appPublic.updateCartSummary();

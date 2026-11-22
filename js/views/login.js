@@ -35,7 +35,7 @@ class LoginView {
         this.form.append(
             createInputField({ id: 'loginUsername', name: 'username', label: 'Usuario', required: true, autofocus: true }),
             createInputField({ id: 'loginPassword', name: 'password', label: 'Contraseña', type: 'password', required: true }),
-            createButton('Ingresar', { type: 'submit', className: 'btn btn-primary w-100' })
+            createButton('Ingresar', { type: 'submit', className: 'btn btn-primary w-100', icon: 'logIn' })
         );
         this.form.addEventListener('submit', (e) => this.handleSubmit(e));
     }
@@ -43,8 +43,9 @@ class LoginView {
     async handleSubmit(e) {
         e.preventDefault();
         const btn = this.form.querySelector('button[type="submit"]');
+        const label = btn.lastChild;
         btn.disabled = true;
-        btn.textContent = 'Ingresando...';
+        label.textContent = 'Ingresando...';
 
         const formData = new FormData(this.form);
         const body = {
@@ -68,7 +69,7 @@ class LoginView {
             flash(err.message, 'danger');
         } finally {
             btn.disabled = false;
-            btn.textContent = 'Ingresar';
+            label.textContent = 'Ingresar';
         }
     }
 
