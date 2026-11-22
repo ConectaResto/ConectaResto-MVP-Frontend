@@ -17,31 +17,27 @@ class WaiterView {
             <div class="view-card">
                 <div class="view-card-header">Panel Mesero</div>
                 <div class="view-card-body">
-                    <ul class="nav nav-tabs mb-3" id="waiterTabs">
-                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#waiterMesas">Mesas y Servicios</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#waiterPedidos">Pedidos</button></li>
-                    </ul>
-                    <div class="tab-content" id="waiterTabContent">
-                        <div class="tab-pane fade show active" id="waiterMesas"></div>
-                        <div class="tab-pane fade" id="waiterPedidos"></div>
+                    <div id="waiterTabContent">
+                        <div id="waiterMesas"></div>
+                        <div id="waiterPedidos" hidden></div>
                     </div>
                 </div>
             </div>
         `;
 
-        this.container.querySelectorAll('#waiterTabs button').forEach(btn => {
-            btn.addEventListener('show.bs.tab', (e) => {
-                const target = e.currentTarget.dataset.bsTarget.slice('#waiter'.length).toLowerCase();
-                this.activeTab = target;
-                this.loadTab(target);
-            });
-        });
-
-        await this.loadTab('mesas');
+        await this.loadTab(this.activeTab);
     }
 
-    async loadTab(tab) {
+    async loadTab(tab, { activate = false } = {}) {
         const container = this.container.querySelector(`#waiter${tab.charAt(0).toUpperCase()}${tab.slice(1)}`);
+        if (!container) return;
+        if (activate) {
+            if (tab === this.activeTab) return;
+            for (const panel of container.parentElement.children) {
+                panel.hidden = panel !== container;
+            }
+            this.activeTab = tab;
+        }
         container.innerHTML = '<div class="text-center py-4"><div class="spinner-border" role="status"></div></div>';
 
         try {

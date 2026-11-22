@@ -11,36 +11,29 @@ class AdminView {
             <div class="view-card">
                 <div class="view-card-header">Panel Administrador</div>
                 <div class="view-card-body">
-                    <ul class="nav nav-tabs mb-3" id="adminTabs">
-                        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#adminMesas">Mesas y QR</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#adminCategorias">Categor&iacute;as</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#adminProductos">Productos</button></li>
-                        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#adminUsuarios">Usuarios</button></li>
-                    </ul>
-                    <div class="tab-content" id="adminTabContent">
-                        <div class="tab-pane fade show active" id="adminMesas"></div>
-                        <div class="tab-pane fade" id="adminCategorias"></div>
-                        <div class="tab-pane fade" id="adminProductos"></div>
-                        <div class="tab-pane fade" id="adminUsuarios"></div>
+                    <div id="adminTabContent">
+                        <div id="adminMesas"></div>
+                        <div id="adminCategorias" hidden></div>
+                        <div id="adminProductos" hidden></div>
+                        <div id="adminUsuarios" hidden></div>
                     </div>
                 </div>
             </div>
         `;
 
-        this.container.querySelectorAll('#adminTabs button').forEach(btn => {
-            btn.addEventListener('show.bs.tab', (e) => {
-                const target = e.currentTarget.dataset.bsTarget.slice('#admin'.length).toLowerCase();
-                this.currentSection = target;
-                this.loadSection(target);
-            });
-        });
-
-        this.loadSection('mesas');
+        this.loadSection(this.currentSection);
     }
 
-    async loadSection(section) {
+    async loadSection(section, { activate = false } = {}) {
         const container = this.container.querySelector(`#admin${section.charAt(0).toUpperCase() + section.slice(1)}`);
         if (!container) return;
+        if (activate) {
+            if (section === this.currentSection) return;
+            for (const panel of container.parentElement.children) {
+                panel.hidden = panel !== container;
+            }
+            this.currentSection = section;
+        }
         if (!container.hasChildNodes()) loading(container);
 
         try {

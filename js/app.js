@@ -87,19 +87,18 @@ function initRoleNav() {
         if (!link || link.hash !== window.location.hash) return;
 
         event.preventDefault();
-        if (link.dataset.tab) {
-            const button = document.querySelector(`#viewContainer [data-bs-target="${link.dataset.tab}"]`);
-            if (button) bootstrap.Tab.getOrCreateInstance(button).show();
+        const tab = link.dataset.tab;
+        if (tab && currentViewInstance instanceof AdminView) {
+            currentViewInstance.loadSection(tab.slice('#admin'.length).toLowerCase(), { activate: true });
+            syncRoleNav(tab);
+        } else if (tab && currentViewInstance instanceof WaiterView) {
+            currentViewInstance.loadTab(tab.slice('#waiter'.length).toLowerCase(), { activate: true });
+            syncRoleNav(tab);
         }
         const mobileNav = document.getElementById('mainNav');
         if (mobileNav.classList.contains('show')) {
             bootstrap.Collapse.getOrCreateInstance(mobileNav, { toggle: false }).hide();
         }
-    });
-
-    document.getElementById('viewContainer').addEventListener('shown.bs.tab', event => {
-        const tab = event.target.dataset.bsTarget;
-        if (tab) syncRoleNav(tab);
     });
 }
 
