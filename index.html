@@ -18,13 +18,17 @@
             <div class="collapse navbar-collapse" id="mainNav">
                 <ul class="navbar-nav me-auto" id="navPublic">
                     <li class="nav-item"><a class="nav-link" href="#login">Iniciar sesi&oacute;n</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#public">Men&uacute; p&uacute;blico</a></li>
+                    <li class="nav-item" id="navPublicMenu" hidden><a class="nav-link" href="#public">Men&uacute; p&uacute;blico</a></li>
                 </ul>
                 <div class="w-100 flex-column flex-lg-row align-items-lg-center" id="navAuthenticated">
                     <ul class="navbar-nav me-lg-auto" id="navRoleSections"></ul>
                     <ul class="navbar-nav">
-                        <li class="nav-item"><span class="navbar-text" id="navUser"></span></li>
-                        <li class="nav-item"><a class="nav-link" href="#" id="navLogout">Cerrar sesi&oacute;n</a></li>
+                        <li class="nav-item dropdown">
+                            <button class="nav-link dropdown-toggle text-start text-wrap text-break mw-100" id="navUser" type="button" data-bs-toggle="dropdown" aria-expanded="false"></button>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navUser">
+                                <li><button class="dropdown-item" id="navLogout" type="button">Cerrar sesi&oacute;n</button></li>
+                            </ul>
+                        </li>
                     </ul>
                 </div>
             </div>
