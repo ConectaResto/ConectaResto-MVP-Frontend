@@ -230,18 +230,38 @@ class AdminView {
                     'Número': mesa.numero,
                     Estado: estadoLegible(mesa.estado)
                 })],
-                ['Editar', 'secondary', () => this.saveMesa(mesa)]
+                ['Editar', 'secondary', () => this.saveMesa(mesa)],
+                ['Eliminar', 'danger', () => this.eliminarMesa(mesa.id)]
             ]
         });
     }
 
+    async eliminarMesa(id) {
+        if (!await confirmAction({
+            title: 'Eliminar mesa',
+            message: '¿Deseas eliminar esta mesa? Dejará de aparecer en los listados del restaurante, pero su información histórica permanecerá guardada.',
+            acceptLabel: 'Eliminar',
+            acceptIcon: 'trash',
+            danger: true
+        })) return;
+
+        try {
+            await api.patch(`/admin/mesas/${id}`, { estado: 'CERRADA' });
+            flash('Mesa eliminada correctamente.', 'success');
+            await this.loadSection('mesas');
+        } catch (err) {
+            flash(err.message, 'danger');
+        }
+    }
+
     saveMesa(mesa) {
+        const { DISPONIBLE, OCUPADA } = ESTADOS_MESA;
         return this.saveRecord({
             section: 'mesas',
             title: mesa ? 'Editar mesa' : 'Agregar mesa',
             fields: [
                 { name: 'numero', label: 'Número de mesa', type: 'number', value: mesa?.numero, min: 1, required: true },
-                { name: 'estado', label: 'Estado', value: mesa?.estado ?? 'DISPONIBLE', options: ESTADOS_MESA, required: true }
+                { name: 'estado', label: 'Estado', value: mesa?.estado ?? 'DISPONIBLE', options: { DISPONIBLE, OCUPADA }, required: true }
             ],
             url: '/admin/mesas',
             id: mesa?.id,
