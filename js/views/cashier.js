@@ -160,14 +160,14 @@ class CashierView {
             const tdEstado = document.createElement('td');
             const badge = document.createElement('span');
             badge.className = 'badge bg-' + badgeColor(p.estado);
-            badge.textContent = estadoLegible(p.estado);
+            badge.textContent = p.estado === 'CANCELADO' ? 'Cancelado' : estadoLegible(p.estado);
             tdEstado.appendChild(badge);
             tr.appendChild(tdEstado);
 
             return tr;
         });
 
-        const allEntregados = servicio.pedidos.length > 0 && servicio.pedidos.every(p => p.estado === 'ENTREGADO');
+        const pedidosFinalizados = servicio.pedidos.every(p => p.estado === 'ENTREGADO' || p.estado === 'CANCELADO');
         const tienePago = !!servicio.pago;
 
         const card = document.createElement('div');
@@ -241,7 +241,7 @@ class CashierView {
         actionsDiv.className = 'd-grid gap-2';
 
         const totalCentavos = this.centavosDe(servicio.total);
-        if (!tienePago && allEntregados && totalCentavos !== null && totalCentavos > 0n) {
+        if (pedidosFinalizados && !tienePago && totalCentavos !== null && totalCentavos > 0n) {
             const btnPay = document.createElement('button');
             btnPay.id = 'cashierPay';
             btnPay.type = 'button';
@@ -259,7 +259,10 @@ class CashierView {
             actionsDiv.appendChild(btnPay);
         }
 
-        if (tienePago && allEntregados) {
+        const puedeCerrar = pedidosFinalizados && totalCentavos !== null && (tienePago
+            ? this.centavosDe(servicio.pago.importe) === totalCentavos
+            : totalCentavos === 0n);
+        if (puedeCerrar) {
             const btnClose = document.createElement('button');
             btnClose.id = 'cashierClose';
             btnClose.type = 'button';
