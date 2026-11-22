@@ -3,6 +3,7 @@ class AdminView {
         this.container = container;
         this.currentSection = 'mesas';
         this.recordFilters = new Map();
+        this.recordPages = new Map();
     }
 
     async init() {
@@ -58,12 +59,49 @@ class AdminView {
 
         const tableContainer = document.createElement('div');
         tableContainer.className = 'table-responsive';
+        const pagination = document.createElement('nav');
+        pagination.className = 'flex-wrap align-items-center justify-content-between gap-2 mt-3';
+        pagination.setAttribute('aria-label', `Paginación de ${title}`);
+        const pageLabel = document.createElement('span');
+        pageLabel.setAttribute('role', 'status');
+
+        const changePage = (step, event) => {
+            const focused = event.currentTarget === document.activeElement;
+            this.recordPages.set(bodyId, this.recordPages.get(bodyId) + step);
+            renderRows();
+            if (focused && event.currentTarget.disabled) {
+                const otherButton = step < 0 ? next : previous;
+                otherButton.focus();
+            }
+        };
+        const previous = createButton('Anterior', {
+            className: 'btn btn-sm btn-outline-secondary',
+            onClick: event => changePage(-1, event)
+        });
+        const next = createButton('Siguiente', {
+            className: 'btn btn-sm btn-outline-secondary',
+            onClick: event => changePage(1, event)
+        });
+        pagination.append(previous, pageLabel, next);
+
+        const pageSize = 10;
         const renderRows = () => {
             const status = this.recordFilters.get(bodyId) ?? 'activos';
             const visible = filterable ? items.filter(item => item.is_active === (status === 'activos')) : items;
+            const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
+            const page = Math.min(pageCount, Math.max(1, this.recordPages.get(bodyId) ?? 1));
+            this.recordPages.set(bodyId, page);
+            const start = (page - 1) * pageSize;
+            const pageItems = visible.slice(start, start + pageSize);
+
             this.disposeActions(tableContainer);
-            const table = renderTable(tableContainer, headers, visible.map(cells),
-                (row, index) => this.renderActions(row[0], actions(visible[index])));
+            const table = renderTable(tableContainer, headers, pageItems.map(cells),
+                (row, index) => this.renderActions(row[0], actions(pageItems[index])));
+            pagination.hidden = pageCount === 1;
+            pagination.classList.toggle('d-flex', !pagination.hidden);
+            pageLabel.textContent = `Página ${page} de ${pageCount}`;
+            previous.disabled = page === 1;
+            next.disabled = page === pageCount;
             const body = table.tBodies[0];
             body.id = bodyId;
             if (!visible.length) {
@@ -85,6 +123,7 @@ class AdminView {
             filter.classList.remove('mb-3');
             filter.querySelector('select').addEventListener('change', event => {
                 this.recordFilters.set(bodyId, event.currentTarget.value);
+                this.recordPages.set(bodyId, 1);
                 renderRows();
             });
             controls.append(filter, addButton);
@@ -94,7 +133,7 @@ class AdminView {
         }
 
         this.disposeActions(container);
-        container.replaceChildren(header, tableContainer);
+        container.replaceChildren(header, tableContainer, pagination);
         renderRows();
     }
 
@@ -132,7 +171,9 @@ class AdminView {
 
     disposeActions(container) {
         for (const toggle of container.querySelectorAll('button[data-bs-toggle="dropdown"]')) {
-            bootstrap.Dropdown.getInstance(toggle)?.dispose();
+            const dropdown = bootstrap.Dropdown.getInstance(toggle);
+            dropdown?.hide();
+            dropdown?.dispose();
         }
     }
 
