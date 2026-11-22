@@ -150,12 +150,10 @@ class PublicView {
         const img = document.createElement('img');
         img.className = 'card-img-top';
         img.alt = p.name;
-        const imageUrl = p.image_url || '/static/img/default-product.svg';
-        if (/^\/[^/]/.test(imageUrl)) {
-            img.src = apiUrl(imageUrl);
-        } else {
-            img.src = apiUrl('/static/img/default-product.svg');
-        }
+        const imageUrl = p.image_url;
+        img.src = imageUrl && /^\/[^/]/.test(imageUrl)
+            ? apiUrl(imageUrl)
+            : './img/default-product.svg';
 
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body';
