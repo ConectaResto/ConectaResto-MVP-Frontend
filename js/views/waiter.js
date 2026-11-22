@@ -94,7 +94,7 @@ class WaiterView {
     renderStateBadge(estado) {
         const badge = document.createElement('span');
         badge.className = `badge bg-${badgeColor(estado)}`;
-        badge.textContent = estadoLegible(estado);
+        badge.textContent = estado === 'CANCELADO' ? 'Cancelado' : estadoLegible(estado);
         return badge;
     }
 
@@ -191,7 +191,7 @@ class WaiterView {
                 <div id="waiterEnCurso"></div>
             </section>
             <section class="border rounded p-3 bg-light" aria-labelledby="waiterHistorialTitulo">
-                <h5 id="waiterHistorialTitulo">Historial de entregados</h5>
+                <h5 id="waiterHistorialTitulo">Historial de entregados y cancelados</h5>
                 <div id="waiterHistorial"></div>
             </section>
         `;
@@ -379,13 +379,13 @@ class WaiterView {
         const historial = [];
         const pedidos = [...this.pedidos].sort((a, b) => b.id - a.id);
         for (const pedido of pedidos) {
-            if (pedido.estado === 'ENTREGADO') historial.push(pedido);
+            if (pedido.estado === 'ENTREGADO' || pedido.estado === 'CANCELADO') historial.push(pedido);
             else if (this.pendienteDeAutorizar(pedido)) pendientes.push(pedido);
             else enCurso.push(pedido);
         }
         this.renderPedidosTable('waiterPendientes', pendientes, nombres, 'No hay pedidos pendientes de autorización.');
         this.renderPedidosTable('waiterEnCurso', enCurso, nombres, 'No hay pedidos en curso.');
-        this.renderPedidosTable('waiterHistorial', historial, nombres, 'No hay pedidos entregados.', true);
+        this.renderPedidosTable('waiterHistorial', historial, nombres, 'No hay pedidos entregados ni cancelados.', true);
     }
 
     renderPedidosTable(id, pedidos, nombres, emptyMessage, historial = false) {
@@ -427,13 +427,14 @@ class WaiterView {
     renderPedidoActions(pedido, historial) {
         const actions = document.createElement('div');
         actions.className = 'd-flex flex-wrap gap-2';
-        if (!historial) {
+        if (!historial && pedido.estado !== 'CANCELADO') {
+            const sinEnviar = pedido.estado === 'PENDIENTE' && pedido.estado_preparacion === 'NO_ENVIADO';
             if (this.pendienteDeAutorizar(pedido)) {
                 actions.append(createButton('Autorizar', {
                     className: 'btn btn-sm btn-primary',
                     onClick: () => this.autorizar(pedido.id)
                 }));
-            } else if (pedido.estado === 'PENDIENTE' && pedido.estado_preparacion === 'NO_ENVIADO') {
+            } else if (sinEnviar) {
                 actions.append(createButton('Enviar a cocina', {
                     className: 'btn btn-sm btn-primary',
                     onClick: () => this.enviarCocina(pedido.id)
@@ -442,6 +443,12 @@ class WaiterView {
                 actions.append(createButton('Entregar', {
                     className: 'btn btn-sm btn-success',
                     onClick: () => this.entregar(pedido.id)
+                }));
+            }
+            if (sinEnviar) {
+                actions.append(createButton('Cancelar', {
+                    className: 'btn btn-sm btn-outline-danger',
+                    onClick: event => this.cancelar(pedido.id, event.currentTarget)
                 }));
             }
         }
@@ -485,11 +492,34 @@ class WaiterView {
         }
     }
 
+    async cancelar(pedidoId, button) {
+        if (!await confirmAction({
+            title: 'Cancelar pedido',
+            message: '¿Está seguro de cancelar este pedido? Quedará en el historial.',
+            acceptLabel: 'Cancelar pedido',
+            danger: true
+        })) return;
+
+        if (!button.isConnected) return;
+        button.disabled = true;
+        try {
+            await api.post(`/pedidos/${pedidoId}/cancelar`, {});
+            flash('Pedido cancelado.', 'success');
+            await this.loadPedidosData();
+            this.renderPedidosGroups();
+        } catch (err) {
+            flash(err.message, 'danger');
+        } finally {
+            button.disabled = false;
+        }
+    }
+
     async detalles(pedidoId) {
         const pedido = this.pedidos.find(item => item.id === pedidoId);
         if (!pedido) return;
         const nombres = new Map(this.productos.map(producto => [producto.id, producto.name]));
-        const lines = [this.mesaDelPedido(pedido), `Estado: ${estadoLegible(pedido.estado)}`];
+        const estado = pedido.estado === 'CANCELADO' ? 'Cancelado' : estadoLegible(pedido.estado);
+        const lines = [this.mesaDelPedido(pedido), `Estado: ${estado}`];
         if (pedido.estado !== 'ENTREGADO') lines.push(`Preparación: ${estadoLegible(pedido.estado_preparacion)}`);
         lines.push(`Total: $${pedido.total}`, '', 'Productos:', ...this.productosDelPedido(pedido, nombres));
         await showActionDialog({

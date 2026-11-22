@@ -2,7 +2,8 @@ const ESTADOS_PEDIDO = {
     PENDIENTE: 'Pendiente',
     EN_PREPARACION: 'En preparacion',
     LISTO: 'Listo',
-    ENTREGADO: 'Entregado'
+    ENTREGADO: 'Entregado',
+    CANCELADO: 'Cancelado'
 };
 
 const ESTADOS_PREPARACION = {
@@ -42,6 +43,7 @@ function badgeColor(estado) {
         EN_PREPARACION: 'warning',
         LISTO: 'success',
         ENTREGADO: 'info',
+        CANCELADO: 'danger',
         RECIBIDO: 'warning',
         EN_COCINA: 'warning',
         LISTO_PARA_SERVIR: 'success',
