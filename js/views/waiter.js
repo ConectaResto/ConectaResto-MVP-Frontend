@@ -5,6 +5,7 @@ class WaiterView {
         this.servicios = [];
         this.serviciosCargados = false;
         this.mesasEnApertura = new Set();
+        this.pedidosEnEnvio = new Set();
         this.pedidos = [];
         this.mesasPorServicio = new Map();
         this.productos = [];
@@ -426,16 +427,13 @@ class WaiterView {
         actions.className = 'd-flex flex-wrap gap-2';
         if (!historial && pedido.estado !== 'CANCELADO') {
             const sinEnviar = pedido.estado === 'PENDIENTE' && pedido.estado_preparacion === 'NO_ENVIADO';
-            if (this.pendienteDeAutorizar(pedido)) {
-                actions.append(createButton('Autorizar', {
+            if (sinEnviar) {
+                const enviar = createButton('Autorizar y enviar a Cocina', {
                     className: 'btn btn-sm btn-primary',
-                    onClick: () => this.autorizar(pedido.id)
-                }));
-            } else if (sinEnviar) {
-                actions.append(createButton('Enviar a cocina', {
-                    className: 'btn btn-sm btn-primary',
-                    onClick: () => this.enviarCocina(pedido.id)
-                }));
+                    onClick: event => this.autorizarYEnviarCocina(pedido.id, event.currentTarget)
+                });
+                enviar.disabled = this.pedidosEnEnvio.has(pedido.id);
+                actions.append(enviar);
             } else if (pedido.estado === 'LISTO') {
                 actions.append(createButton('Entregar', {
                     className: 'btn btn-sm btn-success',
@@ -456,25 +454,20 @@ class WaiterView {
         return actions;
     }
 
-    async autorizar(pedidoId) {
+    async autorizarYEnviarCocina(pedidoId, button) {
+        const panel = button.closest('#waiterPedidos');
+        if (!panel || this.pedidosEnEnvio.has(pedidoId)) return;
+        this.pedidosEnEnvio.add(pedidoId);
+        button.disabled = true;
         try {
-            await api.post(`/pedidos/${pedidoId}/autorizar`, {});
-            flash('Pedido autorizado.', 'success');
-            await this.loadPedidosData();
-            this.renderPedidosGroups();
+            await api.post(`/pedidos/${pedidoId}/autorizar-y-enviar-cocina`, {});
+            flash('Pedido autorizado y enviado a Cocina.', 'success');
+            if (panel.isConnected) await this.loadPedidosData();
         } catch (err) {
             flash(err.message, 'danger');
-        }
-    }
-
-    async enviarCocina(pedidoId) {
-        try {
-            await api.post(`/pedidos/${pedidoId}/enviar-cocina`, {});
-            flash('Pedido enviado a cocina.', 'success');
-            await this.loadPedidosData();
-            this.renderPedidosGroups();
-        } catch (err) {
-            flash(err.message, 'danger');
+        } finally {
+            this.pedidosEnEnvio.delete(pedidoId);
+            if (panel.isConnected) this.renderPedidosGroups();
         }
     }
 
