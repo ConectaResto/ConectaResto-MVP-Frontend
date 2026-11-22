@@ -57,7 +57,7 @@ class CashierView {
             const left = document.createElement('div');
             const servicioDiv = document.createElement('div');
             servicioDiv.className = 'fw-bold';
-            servicioDiv.textContent = 'Servicio #' + s.id + ' - Mesa ' + s.mesa_id;
+            servicioDiv.textContent = 'Mesa ' + (Number.isInteger(s.mesa_numero) && s.mesa_numero > 0 ? s.mesa_numero : 'sin identificar') + ' (Servicio #' + s.id + ')';
             const estadoDiv = document.createElement('div');
             estadoDiv.className = 'small text-muted';
             estadoDiv.textContent = 'Estado: ' + estadoLegible(s.estado);
@@ -177,7 +177,7 @@ class CashierView {
         header.className = 'card-header bg-dark text-white';
         const h6 = document.createElement('h6');
         h6.className = 'mb-0';
-        h6.textContent = 'Servicio #' + servicio.id + ' - Mesa ' + servicio.mesa_id;
+        h6.textContent = 'Mesa ' + (Number.isInteger(servicio.mesa_numero) && servicio.mesa_numero > 0 ? servicio.mesa_numero : 'sin identificar') + ' (Servicio #' + servicio.id + ')';
         header.appendChild(h6);
         card.appendChild(header);
 
@@ -306,7 +306,7 @@ class CashierView {
         })) return;
         try {
             const data = await api.post(`/servicios/${serviceId}/cerrar`, {});
-            flash(`Servicio cerrado. Mesa ${data.data.mesa_id} disponible.`, 'success');
+            flash('Servicio cerrado. Mesa ' + (Number.isInteger(data.data.mesa_numero) && data.data.mesa_numero > 0 ? data.data.mesa_numero : 'sin identificar') + ' disponible.', 'success');
             this.selectedServiceId = null;
             this.container.querySelector('#cashierDetail').innerHTML = '';
             this.load();
