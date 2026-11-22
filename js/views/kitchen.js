@@ -40,6 +40,7 @@ class KitchenView {
                 preparacion.className = `badge text-bg-${badgeColor(pedido.estado_preparacion)}`;
                 preparacion.textContent = estadoLegible(pedido.estado_preparacion);
                 const productos = createButton('Ver productos', {
+                    icon: 'eye',
                     className: 'btn btn-sm btn-outline-secondary',
                     onClick: event => this.verProductos(pedido, nombres, event.currentTarget)
                 });
@@ -52,6 +53,7 @@ class KitchenView {
                 const pedido = activos[index];
                 const recibido = pedido.estado_preparacion === 'RECIBIDO';
                 return createButton(recibido ? 'En cocina' : 'Listo para servir', {
+                    icon: recibido ? 'cooking' : 'ready',
                     className: recibido ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-success',
                     onClick: () => this.cambiarPreparacion(pedido.id, recibido ? 'EN_COCINA' : 'LISTO_PARA_SERVIR')
                 });

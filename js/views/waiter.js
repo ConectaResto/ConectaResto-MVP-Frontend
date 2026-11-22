@@ -106,6 +106,7 @@ class WaiterView {
 
             const opening = this.mesasEnApertura.has(mesa.id);
             const button = createButton(opening ? 'Abriendo…' : 'Abrir servicio', {
+                icon: 'plus',
                 className: 'btn btn-sm btn-primary',
                 onClick: event => this.openService(mesa.id, event.currentTarget)
             });
@@ -126,7 +127,7 @@ class WaiterView {
 
         this.mesasEnApertura.add(mesaId);
         button.disabled = true;
-        button.textContent = 'Abriendo…';
+        button.lastChild.textContent = 'Abriendo…';
 
         try {
             await api.post('/servicios', { mesa_id: mesaId });
@@ -197,7 +198,7 @@ class WaiterView {
             </section>
         `;
         container.querySelector('#waiterPedidoToolbar')
-            .append(createButton('Nuevo pedido', { onClick: () => this.openPedidoModal(container) }));
+            .append(createButton('Nuevo pedido', { icon: 'plus', onClick: () => this.openPedidoModal(container) }));
         this.renderPedidosGroups();
     }
 
@@ -222,6 +223,7 @@ class WaiterView {
             }],
             renderContent: submit => this.renderPedidoItemsEditor(productos, items, submit),
             acceptLabel: 'Crear pedido',
+            acceptIcon: 'plus',
             acceptClass: 'btn btn-success',
             onSubmit: ({ servicio_id }) => {
                 const servicioId = Number(servicio_id);
@@ -264,7 +266,7 @@ class WaiterView {
         const quantityInput = quantityField.querySelector('input');
         const actions = document.createElement('div');
         actions.className = 'col-6 col-sm-3 mb-3';
-        actions.append(createButton('Agregar', { className: 'btn btn-primary w-100', onClick: addItem }));
+        actions.append(createButton('Agregar', { className: 'btn btn-primary w-100', icon: 'plus', onClick: addItem }));
         controls.append(productField, quantityField, actions);
 
         const list = document.createElement('div');
@@ -310,6 +312,7 @@ class WaiterView {
                 const name = document.createElement('span');
                 name.textContent = `${producto.name} x${cantidad}`;
                 const remove = createButton('Quitar', {
+                    icon: 'minus',
                     className: 'btn btn-sm btn-outline-danger',
                     onClick: () => {
                         items.splice(index, 1);
@@ -484,6 +487,7 @@ class WaiterView {
             const sinEnviar = pedido.estado === 'PENDIENTE' && pedido.estado_preparacion === 'NO_ENVIADO';
             if (sinEnviar) {
                 const enviar = createButton('Autorizar y enviar a Cocina', {
+                    icon: 'send',
                     className: 'btn btn-sm btn-primary',
                     onClick: event => this.autorizarYEnviarCocina(pedido.id, event.currentTarget)
                 });
@@ -491,18 +495,21 @@ class WaiterView {
                 actions.append(enviar);
             } else if (pedido.estado === 'LISTO') {
                 actions.append(createButton('Entregar', {
+                    icon: 'delivered',
                     className: 'btn btn-sm btn-success',
                     onClick: () => this.entregar(pedido.id)
                 }));
             }
             if (sinEnviar) {
                 actions.append(createButton('Cancelar', {
+                    icon: 'close',
                     className: 'btn btn-sm btn-outline-danger',
                     onClick: event => this.cancelar(pedido.id, event.currentTarget)
                 }));
             }
         }
         actions.append(createButton('Ver detalles', {
+            icon: 'eye',
             className: 'btn btn-sm btn-outline-secondary',
             onClick: () => this.detalles(pedido.id)
         }));
@@ -543,6 +550,7 @@ class WaiterView {
             title: 'Cancelar pedido',
             message: '¿Está seguro de cancelar este pedido? Quedará en el historial.',
             acceptLabel: 'Cancelar pedido',
+            acceptIcon: 'close',
             danger: true
         })) return;
 
@@ -574,6 +582,7 @@ class WaiterView {
             title: 'Detalles del pedido',
             message: lines.join('\n'),
             acceptLabel: 'Cerrar',
+            acceptIcon: 'close',
             canCancel: false
         });
     }
