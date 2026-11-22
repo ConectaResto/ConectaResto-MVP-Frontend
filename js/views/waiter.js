@@ -7,6 +7,7 @@ class WaiterView {
         this.mesasEnApertura = new Set();
         this.pedidosEnEnvio = new Set();
         this.pedidos = [];
+        this.paginaHistorial = 1;
         this.mesasPorServicio = new Map();
         this.productos = [];
         this.activeTab = 'mesas';
@@ -192,6 +193,7 @@ class WaiterView {
             <section class="border rounded p-3 bg-light" aria-labelledby="waiterHistorialTitulo">
                 <h5 id="waiterHistorialTitulo">Historial de entregados y cancelados</h5>
                 <div id="waiterHistorial"></div>
+                <div id="waiterHistorialPaginacion"></div>
             </section>
         `;
         container.querySelector('#waiterPedidoToolbar')
@@ -383,7 +385,60 @@ class WaiterView {
         }
         this.renderPedidosTable('waiterPendientes', pendientes, nombres, 'No hay pedidos pendientes de autorización.');
         this.renderPedidosTable('waiterEnCurso', enCurso, nombres, 'No hay pedidos en curso.');
-        this.renderPedidosTable('waiterHistorial', historial, nombres, 'No hay pedidos entregados ni cancelados.', true);
+        this.renderHistorial(historial, nombres);
+    }
+
+    renderHistorial(historial, nombres) {
+        const paginacion = this.container.querySelector('#waiterHistorialPaginacion');
+        if (!paginacion) return;
+
+        const pedidosPorPagina = 10;
+        const totalPaginas = Math.max(1, Math.ceil(historial.length / pedidosPorPagina));
+        this.paginaHistorial = Math.min(this.paginaHistorial, totalPaginas);
+
+        const renderPagina = () => {
+            const inicio = (this.paginaHistorial - 1) * pedidosPorPagina;
+            const pedidos = historial.slice(inicio, inicio + pedidosPorPagina);
+            this.renderPedidosTable('waiterHistorial', pedidos, nombres, 'No hay pedidos entregados ni cancelados.', true);
+        };
+
+        renderPagina();
+        paginacion.replaceChildren();
+        if (totalPaginas === 1) return;
+
+        const controles = document.createElement('nav');
+        controles.className = 'd-flex flex-wrap align-items-center justify-content-between gap-2 mt-3';
+        controles.setAttribute('aria-label', 'Paginación del historial de pedidos');
+        const indicador = document.createElement('span');
+        indicador.setAttribute('role', 'status');
+
+        const cambiarPagina = (paso, event) => {
+            const conservarFoco = event.currentTarget === document.activeElement;
+            this.paginaHistorial += paso;
+            renderPagina();
+            actualizarControles();
+            if (conservarFoco && event.currentTarget.disabled) {
+                const otroBoton = paso < 0 ? siguiente : anterior;
+                otroBoton.focus();
+            }
+        };
+        const anterior = createButton('Anterior', {
+            className: 'btn btn-sm btn-outline-secondary',
+            onClick: event => cambiarPagina(-1, event)
+        });
+        const siguiente = createButton('Siguiente', {
+            className: 'btn btn-sm btn-outline-secondary',
+            onClick: event => cambiarPagina(1, event)
+        });
+        const actualizarControles = () => {
+            anterior.disabled = this.paginaHistorial === 1;
+            siguiente.disabled = this.paginaHistorial === totalPaginas;
+            indicador.textContent = `Página ${this.paginaHistorial} de ${totalPaginas}`;
+        };
+
+        controles.append(anterior, indicador, siguiente);
+        paginacion.append(controles);
+        actualizarControles();
     }
 
     renderPedidosTable(id, pedidos, nombres, emptyMessage, historial = false) {
@@ -476,6 +531,7 @@ class WaiterView {
             await api.post(`/pedidos/${pedidoId}/entregar`, {});
             flash('Pedido entregado.', 'success');
             await this.loadPedidosData();
+            this.paginaHistorial = 1;
             this.renderPedidosGroups();
         } catch (err) {
             flash(err.message, 'danger');
@@ -496,6 +552,7 @@ class WaiterView {
             await api.post(`/pedidos/${pedidoId}/cancelar`, {});
             flash('Pedido cancelado.', 'success');
             await this.loadPedidosData();
+            this.paginaHistorial = 1;
             this.renderPedidosGroups();
         } catch (err) {
             flash(err.message, 'danger');
