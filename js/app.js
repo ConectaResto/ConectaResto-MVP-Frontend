@@ -10,6 +10,7 @@ const ROUTES = {
 
 const ROLE_NAVIGATION = {
     ADMIN: {
+        label: 'Administrador',
         path: '#admin',
         sections: [
             { label: 'Mesas y QR', tab: '#adminMesas' },
@@ -19,14 +20,15 @@ const ROLE_NAVIGATION = {
         ]
     },
     WAITER: {
+        label: 'Mesero',
         path: '#waiter',
         sections: [
             { label: 'Mesas y servicios', tab: '#waiterMesas' },
             { label: 'Pedidos', tab: '#waiterPedidos' }
         ]
     },
-    KITCHEN: { path: '#kitchen', sections: [{ label: 'Pedidos activos' }] },
-    CASHIER: { path: '#cashier', sections: [{ label: 'Servicios activos' }] }
+    KITCHEN: { label: 'Cocina', path: '#kitchen', sections: [{ label: 'Pedidos activos' }] },
+    CASHIER: { label: 'Cajero', path: '#cashier', sections: [{ label: 'Servicios activos' }] }
 };
 
 const VIEW_MODULES = {
@@ -50,15 +52,18 @@ function syncRoleNav(activeTab) {
 }
 
 function updateNav() {
+    const route = ROUTES[window.location.hash] || ROUTES[''];
     const navPublic = document.getElementById('navPublic');
     const navAuthenticated = document.getElementById('navAuthenticated');
     const navUser = document.getElementById('navUser');
-    const roleNav = state.isAuthenticated() ? ROLE_NAVIGATION[state.user.rol] : null;
+    const authenticated = state.isAuthenticated();
+    const roleNav = authenticated ? ROLE_NAVIGATION[state.user.rol] : null;
     const sections = document.getElementById('navRoleSections');
 
-    navPublic.style.display = state.isAuthenticated() ? 'none' : 'flex';
-    navAuthenticated.style.display = state.isAuthenticated() ? 'flex' : 'none';
-    navUser.textContent = state.isAuthenticated() ? `${state.user.username} (${state.user.rol})` : '';
+    document.getElementById('navPublicMenu').hidden = route === 'login';
+    navPublic.style.display = authenticated ? 'none' : 'flex';
+    navAuthenticated.style.display = authenticated ? 'flex' : 'none';
+    navUser.textContent = authenticated ? `${state.user.username} (${roleNav?.label || state.user.rol})` : '';
     document.getElementById('navHome').href = roleNav?.path || '#login';
 
     sections.replaceChildren();
