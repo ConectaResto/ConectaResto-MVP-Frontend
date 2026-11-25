@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="575" viewBox="0 0 960 575" role="img" aria-labelledby="title desc">
+  <title id="title">C4 — Diagrama de componentes</title>
+  <desc id="desc">La SPA es un cliente externo. Flask registra los dominios de la API y usa los módulos transversales mostrados. Solo servicios y pedidos contienen repositorios y DTO propios.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #1e293b; }
+    .heading { fill: #1a3a5c; }
+    .label { fill: #334155; }
+    .edge { fill: none; stroke: #334155; stroke-width: 1.5; }
+    .return { stroke-dasharray: 5 4; }
+    .lifeline { stroke: #94a3b8; stroke-width: 1.2; stroke-dasharray: 5 4; }
+  </style>
+  <text x="480" y="34" text-anchor="middle" font-size="23" font-weight="700" class="heading">C4 — Diagrama de componentes</text>
+  <g>
+<rect x="318" y="57" width="324" height="63" rx="8" fill="#e8f5e9" stroke="#4caf50" stroke-width="1.6"/>
+<text x="480" y="83.5" text-anchor="middle" font-size="17" font-weight="700">SPA independiente</text>
+<text x="480" y="105.5" text-anchor="middle" font-size="14">Cliente externo al backend</text>
+</g>
+  <path d="M 480 120 V 165" class="edge" marker-end="url(#arrow)"/>
+  <text x="494" y="148" text-anchor="start" font-size="14" class="label">HTTP · API REST</text>
+  <rect x="32" y="165" width="896" height="380" rx="8" fill="#fafafa" stroke="#a9b6c3" stroke-width="1.6"/>
+  <text x="56" y="194" text-anchor="start" font-size="18" font-weight="700" class="heading">Backend Flask · create_app()</text>
+  <g>
+<rect x="55" y="213" width="270" height="73" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+<text x="190" y="244.5" text-anchor="middle" font-size="17" font-weight="700">auth</text>
+<text x="190" y="266.5" text-anchor="middle" font-size="14">Sesiones, roles y CSRF</text>
+</g>
+  <g>
+<rect x="345" y="213" width="270" height="73" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+<text x="480" y="244.5" text-anchor="middle" font-size="17" font-weight="700">users</text>
+<text x="480" y="266.5" text-anchor="middle" font-size="14">Usuarios, roles y seed-demo</text>
+</g>
+  <g>
+<rect x="635" y="213" width="270" height="73" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+<text x="770" y="244.5" text-anchor="middle" font-size="17" font-weight="700">catalog</text>
+<text x="770" y="266.5" text-anchor="middle" font-size="14">Categorías, productos y fotos</text>
+</g>
+  <g>
+<rect x="55" y="302" width="270" height="115" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+<text x="190" y="344.5" text-anchor="middle" font-size="17" font-weight="700">mesas</text>
+<text x="190" y="366.5" text-anchor="middle" font-size="14">Mesas, QR y rutas públicas</text>
+<text x="190" y="386.5" text-anchor="middle" font-size="14">Consulta por token y pedido público</text>
+</g>
+  <g>
+<rect x="345" y="302" width="270" height="115" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+<text x="480" y="334.5" text-anchor="middle" font-size="17" font-weight="700">servicios</text>
+<text x="480" y="356.5" text-anchor="middle" font-size="14">Apertura, pago simulado y cierre</text>
+<text x="480" y="376.5" text-anchor="middle" font-size="14">servicios.repository</text>
+<text x="480" y="396.5" text-anchor="middle" font-size="14">servicios.dto</text>
+</g>
+  <g>
+<rect x="635" y="302" width="270" height="115" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+<text x="770" y="334.5" text-anchor="middle" font-size="17" font-weight="700">pedidos</text>
+<text x="770" y="356.5" text-anchor="middle" font-size="14">Creación y transiciones</text>
+<text x="770" y="376.5" text-anchor="middle" font-size="14">pedidos.repository</text>
+<text x="770" y="396.5" text-anchor="middle" font-size="14">pedidos.dto</text>
+</g>
+  <text x="55" y="448" text-anchor="start" font-size="14" font-weight="700" class="heading">Módulos compartidos y de soporte</text>
+  <g>
+<rect x="55" y="460" width="162" height="62" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1.6"/>
+<text x="136" y="486" text-anchor="middle" font-size="15" font-weight="700">health</text>
+<text x="136" y="508" text-anchor="middle" font-size="13">GET /health</text>
+</g>
+  <g>
+<rect x="227" y="460" width="162" height="62" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1.6"/>
+<text x="308" y="486" text-anchor="middle" font-size="15" font-weight="700">common</text>
+<text x="308" y="508" text-anchor="middle" font-size="13">Respuestas y errores</text>
+</g>
+  <g>
+<rect x="399" y="460" width="162" height="62" rx="8" fill="#f3e5f5" stroke="#9c27b0" stroke-width="1.6"/>
+<text x="480" y="486" text-anchor="middle" font-size="15" font-weight="700">models</text>
+<text x="480" y="508" text-anchor="middle" font-size="13">Base y registro ORM</text>
+</g>
+  <g>
+<rect x="571" y="460" width="162" height="62" rx="8" fill="#eceff1" stroke="#607d8b" stroke-width="1.6"/>
+<text x="652" y="486" text-anchor="middle" font-size="15" font-weight="700">config</text>
+<text x="652" y="508" text-anchor="middle" font-size="13">Configuración</text>
+</g>
+  <g>
+<rect x="743" y="460" width="162" height="62" rx="8" fill="#eceff1" stroke="#607d8b" stroke-width="1.6"/>
+<text x="824" y="486" text-anchor="middle" font-size="15" font-weight="700">extensions</text>
+<text x="824" y="508" text-anchor="middle" font-size="13">db y migrate</text>
+</g>
+</svg>

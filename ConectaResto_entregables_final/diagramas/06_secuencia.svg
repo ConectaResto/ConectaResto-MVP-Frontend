@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="1066" viewBox="0 0 1100 1066" role="img" aria-labelledby="title desc">
+  <title id="title">Diagrama de secuencia — Del QR al cierre del servicio</title>
+  <desc id="desc">Flujo principal exitoso con pago simulado positivo. Los paneles de los roles son vistas de la SPA. Las flechas discontinuas representan respuestas HTTP.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #1e293b; }
+    .heading { fill: #1a3a5c; }
+    .label { fill: #334155; }
+    .edge { fill: none; stroke: #334155; stroke-width: 1.5; }
+    .return { stroke-dasharray: 5 4; }
+    .lifeline { stroke: #94a3b8; stroke-width: 1.2; stroke-dasharray: 5 4; }
+  </style>
+  <text x="550" y="34" text-anchor="middle" font-size="23" font-weight="700" class="heading">Diagrama de secuencia — Del QR al cierre del servicio</text>
+  <rect x="18" y="104" width="1064" height="67" rx="7" fill="#f6f8fa" stroke="#d6e1e9"/>
+  <rect x="18" y="179" width="1064" height="105" rx="7" fill="#edf4f8" stroke="#d6e1e9"/>
+  <rect x="18" y="292" width="1064" height="149" rx="7" fill="#f6f8fa" stroke="#d6e1e9"/>
+  <rect x="18" y="449" width="1064" height="108" rx="7" fill="#edf4f8" stroke="#d6e1e9"/>
+  <rect x="18" y="565" width="1064" height="166" rx="7" fill="#f6f8fa" stroke="#d6e1e9"/>
+  <rect x="18" y="739" width="1064" height="97" rx="7" fill="#edf4f8" stroke="#d6e1e9"/>
+  <rect x="18" y="844" width="1064" height="96" rx="7" fill="#f6f8fa" stroke="#d6e1e9"/>
+  <rect x="18" y="948" width="1064" height="96" rx="7" fill="#edf4f8" stroke="#d6e1e9"/>
+  <line x1="287" y1="92" x2="287" y2="1044" class="lifeline"/>
+  <line x1="1047" y1="92" x2="1047" y2="1044" class="lifeline"/>
+  <g>
+<rect x="180" y="53" width="214" height="39" rx="8" fill="#e8f5e9" stroke="#4caf50" stroke-width="1.6"/>
+<text x="287" y="77.5" text-anchor="middle" font-size="15" font-weight="700">SPA en el navegador</text>
+</g>
+  <g>
+<rect x="995" y="53" width="104" height="39" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1.6"/>
+<text x="1047" y="77.5" text-anchor="middle" font-size="15" font-weight="700">API Flask</text>
+</g>
+  <text x="666" y="78" text-anchor="middle" font-size="14" class="label">Flujo exitoso · las mutaciones requieren CSRF</text>
+  <text x="32" y="130" text-anchor="start" font-size="18" font-weight="700" class="heading">1. Abrir el QR</text>
+  <text x="32" y="153" text-anchor="start" font-size="14" class="label">Cliente</text>
+  <text x="667" y="143" text-anchor="middle" font-size="16">El navegador abre /?token=&lt;token&gt;#public en 127.0.0.1:8000</text>
+  <text x="32" y="205" text-anchor="start" font-size="18" font-weight="700" class="heading">2. Consultar el menú</text>
+  <text x="32" y="228" text-anchor="start" font-size="14" class="label">SPA pública</text>
+  <text x="667" y="207" text-anchor="middle" font-size="16">GET /public/mesas/&lt;token&gt;  ·  GET /categories  ·  GET /products</text>
+  <path d="M 287 215 H 1047" class="edge" marker-end="url(#arrow)"/>
+  <text x="667" y="245" text-anchor="middle" font-size="16">200 · JSON de la mesa, las categorías y los productos</text>
+  <path d="M 1047 253 H 287" class="edge return" marker-end="url(#arrow)"/>
+  <text x="32" y="318" text-anchor="start" font-size="18" font-weight="700" class="heading">3. Crear el pedido</text>
+  <text x="32" y="341" text-anchor="start" font-size="14" class="label">Cliente · sin iniciar sesión</text>
+  <text x="667" y="315" text-anchor="middle" font-size="16">GET /auth/csrf · recibe el token de sesión</text>
+  <path d="M 287 323 H 1047" class="edge" marker-end="url(#arrow)"/>
+  <text x="667" y="352" text-anchor="middle" font-size="16">POST /public/mesas/&lt;token&gt;/pedidos · encabezado X-CSRF-Token</text>
+  <path d="M 287 360 H 1047" class="edge" marker-end="url(#arrow)"/>
+  <text x="667" y="389" text-anchor="middle" font-size="16">201 · id y estado PENDIENTE</text>
+  <path d="M 1047 397 H 287" class="edge return" marker-end="url(#arrow)"/>
+  <text x="667" y="427" text-anchor="middle" font-size="14" class="label">Preparación inicial NO_ENVIADO · reutiliza o abre el servicio activo</text>
+  <text x="32" y="475" text-anchor="start" font-size="18" font-weight="700" class="heading">4. Autorizar y enviar</text>
+  <text x="32" y="498" text-anchor="start" font-size="14" class="label">Mesero · WAITER</text>
+  <text x="667" y="477" text-anchor="middle" font-size="16">POST /pedidos/&lt;id&gt;/autorizar-y-enviar-cocina</text>
+  <path d="M 287 485 H 1047" class="edge" marker-end="url(#arrow)"/>
+  <text x="667" y="515" text-anchor="middle" font-size="16">200 · pedido EN_PREPARACION · preparación RECIBIDO</text>
+  <path d="M 1047 523 H 287" class="edge return" marker-end="url(#arrow)"/>
+  <text x="32" y="591" text-anchor="start" font-size="18" font-weight="700" class="heading">5. Preparar el pedido</text>
+  <text x="32" y="614" text-anchor="start" font-size="14" class="label">Cocina · KITCHEN</text>
+  <text x="667" y="586" text-anchor="middle" font-size="16">PATCH /pedidos/&lt;id&gt;/preparacion · estado EN_COCINA</text>
+  <path d="M 287 594 H 1047" class="edge" marker-end="url(#arrow)"/>
+  <text x="667" y="623" text-anchor="middle" font-size="16">200 · pedido EN_PREPARACION · preparación EN_COCINA</text>
+  <path d="M 1047 631 H 287" class="edge return" marker-end="url(#arrow)"/>
+  <text x="667" y="660" text-anchor="middle" font-size="16">PATCH /pedidos/&lt;id&gt;/preparacion · estado LISTO_PARA_SERVIR</text>
+  <path d="M 287 668 H 1047" class="edge" marker-end="url(#arrow)"/>
+  <text x="667" y="697" text-anchor="middle" font-size="16">200 · pedido LISTO · preparación LISTO_PARA_SERVIR</text>
+  <path d="M 1047 705 H 287" class="edge return" marker-end="url(#arrow)"/>
+  <text x="32" y="765" text-anchor="start" font-size="18" font-weight="700" class="heading">6. Entregar</text>
+  <text x="32" y="788" text-anchor="start" font-size="14" class="label">Mesero · WAITER</text>
+  <text x="667" y="762" text-anchor="middle" font-size="16">POST /pedidos/&lt;id&gt;/entregar</text>
+  <path d="M 287 770 H 1047" class="edge" marker-end="url(#arrow)"/>
+  <text x="667" y="799" text-anchor="middle" font-size="16">200 · pedido ENTREGADO</text>
+  <path d="M 1047 807 H 287" class="edge return" marker-end="url(#arrow)"/>
+  <text x="32" y="870" text-anchor="start" font-size="18" font-weight="700" class="heading">7. Registrar el pago</text>
+  <text x="32" y="893" text-anchor="start" font-size="14" class="label">Caja · CASHIER</text>
+  <text x="667" y="867" text-anchor="middle" font-size="16">POST /servicios/&lt;id&gt;/pago-simulado · total cobrable positivo</text>
+  <path d="M 287 875 H 1047" class="edge" marker-end="url(#arrow)"/>
+  <text x="667" y="904" text-anchor="middle" font-size="16">201 · servicio con el pago registrado</text>
+  <path d="M 1047 912 H 287" class="edge return" marker-end="url(#arrow)"/>
+  <text x="32" y="974" text-anchor="start" font-size="18" font-weight="700" class="heading">8. Cerrar el servicio</text>
+  <text x="32" y="997" text-anchor="start" font-size="14" class="label">Caja · CASHIER</text>
+  <text x="667" y="971" text-anchor="middle" font-size="16">POST /servicios/&lt;id&gt;/cerrar</text>
+  <path d="M 287 979 H 1047" class="edge" marker-end="url(#arrow)"/>
+  <text x="667" y="1008" text-anchor="middle" font-size="16">200 · servicio CERRADO · la mesa vuelve a DISPONIBLE</text>
+  <path d="M 1047 1016 H 287" class="edge return" marker-end="url(#arrow)"/>
+</svg>

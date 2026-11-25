@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="596" viewBox="0 0 960 596" role="img" aria-labelledby="title desc">
+  <title id="title">Diagrama de despliegue local</title>
+  <desc id="desc">Windows ejecuta el navegador y los servidores locales de la SPA, Flask y MySQL. Flask lee y escribe las fotos de productos en el sistema de archivos.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #1e293b; }
+    .heading { fill: #1a3a5c; }
+    .label { fill: #334155; }
+    .edge { fill: none; stroke: #334155; stroke-width: 1.5; }
+    .return { stroke-dasharray: 5 4; }
+    .lifeline { stroke: #94a3b8; stroke-width: 1.2; stroke-dasharray: 5 4; }
+  </style>
+  <text x="480" y="34" text-anchor="middle" font-size="23" font-weight="700" class="heading">Diagrama de despliegue local</text>
+  <rect x="25" y="54" width="910" height="518" rx="10" fill="#fafafa" stroke="#a9b6c3" stroke-width="1.6"/>
+  <text x="53" y="86" text-anchor="start" font-size="18" font-weight="700" class="heading">Equipo local · Windows</text>
+  <g>
+<rect x="356" y="100" width="248" height="67" rx="8" fill="#e8f5e9" stroke="#4caf50" stroke-width="1.6"/>
+<text x="480" y="128.5" text-anchor="middle" font-size="17" font-weight="700">Navegador web</text>
+<text x="480" y="150.5" text-anchor="middle" font-size="14">Ejecuta la SPA</text>
+</g>
+  <path d="M 425 167 V 211 H 238 V 252" class="edge" marker-end="url(#arrow)"/>
+  <text x="324" y="201" text-anchor="middle" font-size="14" class="label">HTTP · archivos estáticos</text>
+  <path d="M 535 167 V 211 H 721 V 252" class="edge" marker-end="url(#arrow)"/>
+  <text x="633" y="201" text-anchor="middle" font-size="14" class="label">HTTP · API REST</text>
+  <g>
+<rect x="55" y="252" width="365" height="107" rx="8" fill="#e8f5e9" stroke="#4caf50" stroke-width="1.6"/>
+<text x="237.5" y="290.5" text-anchor="middle" font-size="17" font-weight="700">Servidor estático de la SPA</text>
+<text x="237.5" y="312.5" text-anchor="middle" font-size="14">127.0.0.1:8000</text>
+<text x="237.5" y="332.5" text-anchor="middle" font-size="14">Python http.server · raíz del frontend</text>
+</g>
+  <g>
+<rect x="539" y="252" width="365" height="107" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1.6"/>
+<text x="721.5" y="290.5" text-anchor="middle" font-size="17" font-weight="700">Servidor Flask · API REST</text>
+<text x="721.5" y="312.5" text-anchor="middle" font-size="14">127.0.0.1:5000</text>
+<text x="721.5" y="332.5" text-anchor="middle" font-size="14">Python · Flask</text>
+</g>
+  <path d="M 598 359 V 407 H 300 V 453" class="edge" marker-end="url(#arrow)"/>
+  <text x="435" y="396" text-anchor="middle" font-size="14" class="label">SQLAlchemy / PyMySQL</text>
+  <path d="M 698 359 V 453" class="edge" marker-end="url(#arrow)"/>
+  <text x="710" y="407" text-anchor="start" font-size="14" class="label">Lectura y escritura</text>
+  <g>
+<rect x="146" y="453" width="308" height="80" rx="8" fill="#ffebee" stroke="#f44336" stroke-width="1.6"/>
+<text x="300" y="488" text-anchor="middle" font-size="17" font-weight="700">MySQL 8 local</text>
+<text x="300" y="510" text-anchor="middle" font-size="14">127.0.0.1:3306</text>
+</g>
+  <g>
+<rect x="544" y="453" width="308" height="80" rx="8" fill="#f3e5f5" stroke="#9c27b0" stroke-width="1.6"/>
+<text x="698" y="488" text-anchor="middle" font-size="17" font-weight="700">Fotos de productos</text>
+<text x="698" y="510" text-anchor="middle" font-size="14">instance/uploads/products/</text>
+</g>
+</svg>

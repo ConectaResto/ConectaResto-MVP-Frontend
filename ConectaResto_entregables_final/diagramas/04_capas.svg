@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="676" viewBox="0 0 900 676" role="img" aria-labelledby="title desc">
+  <title id="title">Arquitectura por capas</title>
+  <desc id="desc">Presentación independiente y responsabilidades de la API Flask, la lógica de aplicación y la persistencia.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <style>
+    text { font-family: Arial, sans-serif; fill: #1e293b; }
+    .heading { fill: #1a3a5c; }
+    .label { fill: #334155; }
+    .edge { fill: none; stroke: #334155; stroke-width: 1.5; }
+    .return { stroke-dasharray: 5 4; }
+    .lifeline { stroke: #94a3b8; stroke-width: 1.2; stroke-dasharray: 5 4; }
+  </style>
+  <text x="450" y="34" text-anchor="middle" font-size="23" font-weight="700" class="heading">Arquitectura por capas</text>
+  <rect x="39" y="65" width="822" height="66" rx="8" fill="#e8f5e9" stroke="#4caf50" stroke-width="1.6"/>
+  <text x="61" y="91" text-anchor="start" font-size="18" font-weight="700">Presentación</text>
+  <text x="61" y="113" text-anchor="start" font-size="15">SPA independiente · HTML, CSS, JavaScript vanilla y Bootstrap local</text>
+  <rect x="26" y="171" width="848" height="484" rx="8" fill="#fafafa" stroke="#a9b6c3" stroke-width="1.6"/>
+  <path d="M 450 131 V 201" class="edge" marker-end="url(#arrow)"/>
+  <text x="464" y="156" text-anchor="start" font-size="14" class="label">HTTP · SPA a Flask</text>
+  <text x="50" y="192" text-anchor="start" font-size="14" font-weight="700" class="heading">Backend Flask</text>
+  <rect x="39" y="202" width="822" height="63" rx="8" fill="#fff9c4" stroke="#c49000" stroke-width="1.6"/>
+  <text x="61" y="227" text-anchor="start" font-size="17" font-weight="700">API REST</text>
+  <text x="61" y="249" text-anchor="start" font-size="15">Blueprints de Flask · rutas HTTP, permisos por rol y protección CSRF</text>
+  <rect x="39" y="276" width="822" height="63" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1.6"/>
+  <text x="61" y="301" text-anchor="start" font-size="17" font-weight="700">Servicios de aplicación</text>
+  <text x="61" y="323" text-anchor="start" font-size="15">auth.service · users.service · catalog.service · servicios.service · pedidos.service</text>
+  <rect x="39" y="350" width="822" height="63" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+  <text x="61" y="375" text-anchor="start" font-size="17" font-weight="700">Repositorios</text>
+  <text x="61" y="397" text-anchor="start" font-size="15">PedidoRepository y ServicioRepository · consultas SQLAlchemy y bloqueo de filas</text>
+  <rect x="39" y="424" width="822" height="63" rx="8" fill="#f3e5f5" stroke="#9c27b0" stroke-width="1.6"/>
+  <text x="61" y="449" text-anchor="start" font-size="17" font-weight="700">Transferencia de datos (DTO)</text>
+  <text x="61" y="471" text-anchor="start" font-size="15">PedidoDTO y ServicioDTO · serialización de respuestas JSON</text>
+  <rect x="39" y="498" width="822" height="63" rx="8" fill="#ffebee" stroke="#f44336" stroke-width="1.6"/>
+  <text x="61" y="523" text-anchor="start" font-size="17" font-weight="700">Dominio</text>
+  <text x="61" y="545" text-anchor="start" font-size="15">Modelos SQLAlchemy en los módulos de dominio · entidades, estados y restricciones</text>
+  <rect x="39" y="572" width="822" height="63" rx="8" fill="#eceff1" stroke="#607d8b" stroke-width="1.6"/>
+  <text x="61" y="597" text-anchor="start" font-size="17" font-weight="700">Persistencia</text>
+  <text x="61" y="619" text-anchor="start" font-size="15">MySQL 8 · SQLAlchemy / PyMySQL · Flask-Migrate (migraciones 001–015)</text>
+</svg>

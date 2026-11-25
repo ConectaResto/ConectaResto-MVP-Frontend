@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1144" height="846" viewBox="0 0 1144 846" role="img" aria-labelledby="title desc">
+  <title id="title">Diagrama de Clases / Entidades del Dominio</title>
+  <desc id="desc">Entidades y relaciones del diagrama original con mayor espacio para campos y conectores.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <style>text { font-family: Arial, sans-serif; fill: #1e293b; }</style>
+  <text x="572" y="37" text-anchor="middle" font-size="24" font-weight="700">Diagrama de Clases / Entidades del Dominio</text>
+  <g>
+  <rect x="22" y="61" width="230" height="119" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+  <text x="137" y="87" text-anchor="middle" font-size="19" font-weight="700">roles</text>
+  <text x="35" y="113" text-anchor="start" font-size="16">+ id: int PK</text>
+  <text x="35" y="136" text-anchor="start" font-size="16">+ name: string UK</text>
+  <text x="35" y="159" text-anchor="start" font-size="16">+ description: text</text>
+  </g>
+  <g>
+  <rect x="312" y="61" width="230" height="188" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+  <text x="427" y="87" text-anchor="middle" font-size="19" font-weight="700">usuarios</text>
+  <text x="325" y="113" text-anchor="start" font-size="16">+ id: int PK</text>
+  <text x="325" y="136" text-anchor="start" font-size="16">+ username: string UK</text>
+  <text x="325" y="159" text-anchor="start" font-size="16">+ email: string UK</text>
+  <text x="325" y="182" text-anchor="start" font-size="16">+ password_hash: string</text>
+  <text x="325" y="205" text-anchor="start" font-size="16">+ rol_id: int FK</text>
+  <text x="325" y="228" text-anchor="start" font-size="16">+ is_active: boolean</text>
+  </g>
+  <g>
+  <rect x="602" y="61" width="230" height="142" rx="8" fill="#ffebee" stroke="#f44336" stroke-width="1.6"/>
+  <text x="717" y="87" text-anchor="middle" font-size="19" font-weight="700">pagos</text>
+  <text x="615" y="113" text-anchor="start" font-size="16">+ id: int PK</text>
+  <text x="615" y="136" text-anchor="start" font-size="16">+ servicio_id: int UK FK</text>
+  <text x="615" y="159" text-anchor="start" font-size="16">+ registrado_por_id: int FK</text>
+  <text x="615" y="182" text-anchor="start" font-size="16">+ importe: decimal</text>
+  </g>
+  <g>
+  <rect x="22" y="340" width="230" height="142" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1.6"/>
+  <text x="137" y="366" text-anchor="middle" font-size="19" font-weight="700">mesas</text>
+  <text x="35" y="392" text-anchor="start" font-size="16">+ id: int PK</text>
+  <text x="35" y="415" text-anchor="start" font-size="16">+ numero: int UK</text>
+  <text x="35" y="438" text-anchor="start" font-size="16">+ estado: string</text>
+  <text x="35" y="461" text-anchor="start" font-size="16">+ public_token: string UK</text>
+  </g>
+  <g>
+  <rect x="312" y="340" width="230" height="142" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1.6"/>
+  <text x="427" y="366" text-anchor="middle" font-size="19" font-weight="700">servicios</text>
+  <text x="325" y="392" text-anchor="start" font-size="16">+ id: int PK</text>
+  <text x="325" y="415" text-anchor="start" font-size="16">+ mesa_id: int FK</text>
+  <text x="325" y="438" text-anchor="start" font-size="16">+ abierto_por_id: int FK</text>
+  <text x="325" y="461" text-anchor="start" font-size="16">+ estado: string</text>
+  </g>
+  <g>
+  <rect x="602" y="340" width="230" height="188" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1.6"/>
+  <text x="717" y="366" text-anchor="middle" font-size="19" font-weight="700">pedidos</text>
+  <text x="615" y="392" text-anchor="start" font-size="16">+ id: int PK</text>
+  <text x="615" y="415" text-anchor="start" font-size="16">+ servicio_id: int FK</text>
+  <text x="615" y="438" text-anchor="start" font-size="16">+ origen: string</text>
+  <text x="615" y="461" text-anchor="start" font-size="16">+ creado_por_id: int FK</text>
+  <text x="615" y="484" text-anchor="start" font-size="16">+ estado: string</text>
+  <text x="615" y="507" text-anchor="start" font-size="16">+ estado_preparacion: string</text>
+  </g>
+  <g>
+  <rect x="892" y="340" width="230" height="165" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1.6"/>
+  <text x="1007" y="366" text-anchor="middle" font-size="19" font-weight="700">detalles_pedido</text>
+  <text x="905" y="392" text-anchor="start" font-size="16">+ id: int PK</text>
+  <text x="905" y="415" text-anchor="start" font-size="16">+ pedido_id: int FK</text>
+  <text x="905" y="438" text-anchor="start" font-size="16">+ producto_id: int FK</text>
+  <text x="905" y="461" text-anchor="start" font-size="16">+ cantidad: int</text>
+  <text x="905" y="484" text-anchor="start" font-size="16">+ precio_unitario: decimal</text>
+  </g>
+  <g>
+  <rect x="602" y="612" width="230" height="142" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+  <text x="717" y="638" text-anchor="middle" font-size="19" font-weight="700">categories</text>
+  <text x="615" y="664" text-anchor="start" font-size="16">+ id: int PK</text>
+  <text x="615" y="687" text-anchor="start" font-size="16">+ name: string UK</text>
+  <text x="615" y="710" text-anchor="start" font-size="16">+ description: string</text>
+  <text x="615" y="733" text-anchor="start" font-size="16">+ is_active: boolean</text>
+  </g>
+  <g>
+  <rect x="892" y="612" width="230" height="211" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+  <text x="1007" y="638" text-anchor="middle" font-size="19" font-weight="700">products</text>
+  <text x="905" y="664" text-anchor="start" font-size="16">+ id: int PK</text>
+  <text x="905" y="687" text-anchor="start" font-size="16">+ name: string</text>
+  <text x="905" y="710" text-anchor="start" font-size="16">+ description: string</text>
+  <text x="905" y="733" text-anchor="start" font-size="16">+ price: decimal(10,2)</text>
+  <text x="905" y="756" text-anchor="start" font-size="16">+ categoria_id: int FK</text>
+  <text x="905" y="779" text-anchor="start" font-size="16">+ is_active: boolean</text>
+  <text x="905" y="802" text-anchor="start" font-size="16">+ is_available: boolean</text>
+  </g>
+  <path d="M 252 115 H 312" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="282" y="106" text-anchor="middle" font-size="14">tiene</text>
+  <path d="M 542 115 H 602" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="572" y="106" text-anchor="middle" font-size="14">registra</text>
+  <path d="M 252 394 H 312" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="282" y="385" text-anchor="middle" font-size="14">tiene</text>
+  <path d="M 542 394 H 602" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="572" y="385" text-anchor="middle" font-size="14">contiene</text>
+  <path d="M 832 394 H 892" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="862" y="385" text-anchor="middle" font-size="14">incluye</text>
+  <path d="M 832 666 H 892" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="862" y="657" text-anchor="middle" font-size="14">contiene</text>
+  <path d="M 427 340 V 274 H 717 V 203" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="572" y="264" text-anchor="middle" font-size="14">tiene un</text>
+  <path d="M 1007 612 V 505" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <text x="1017" y="563" text-anchor="start" font-size="14">referenciado en</text>
+</svg>

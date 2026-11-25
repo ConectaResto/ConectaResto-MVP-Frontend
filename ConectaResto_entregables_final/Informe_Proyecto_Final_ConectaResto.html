@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Informe Proyecto Final ConectaResto</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; background: #f5f7fa; }
+  h1, h2, h3 { color: #1a3a5c; border-bottom: 2px solid #1a3a5c; padding-bottom: 8px; }
+  h1 { font-size: 2em; text-align: center; border-bottom: 3px solid #1a3a5c; }
+  h2 { font-size: 1.5em; margin-top: 30px; }
+  h3 { font-size: 1.2em; border-bottom: 1px solid #ccc; }
+  table { width: 100%; border-collapse: collapse; margin: 15px 0; background: #fff; }
+  th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+  th { background: #1a3a5c; color: #fff; }
+  tr:nth-child(even) { background: #f2f4f8; }
+  .evidence { background: #e8f5e9; border-left: 4px solid #4caf50; padding: 12px; margin: 15px 0; }
+  .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold; }
+  .badge-ok { background: #c8e6c9; color: #1b5e20; }
+  ul { padding-left: 20px; }
+  .code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 0.9em; }
+  .header-meta { text-align: center; color: #666; margin-bottom: 30px; }
+  .section-nav { background: #fff; padding: 15px; border-radius: 6px; margin-bottom: 25px; border: 1px solid #ddd; }
+  .section-nav ul { list-style: none; padding: 0; columns: 3; }
+  .section-nav li { margin: 4px 0; }
+  .section-nav li::before { content: "▹"; color: #1a3a5c; font-weight: bold; display: inline-block; width: 10px; margin-left: -10px; }
+  .diagram-container { text-align: center; margin: 20px 0; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #fff; }
+  .diagram-container img { display: block; width: 100%; height: auto; border-radius: 4px; }
+  .diagram-caption { margin-top: 8px; color: #4b5563; }
+  .diagram-caption a { display: inline-block; margin-top: 4px; color: #18538c; }
+  .diagram-caption a:focus-visible { outline: 2px solid #18538c; outline-offset: 3px; }
+  @media (min-width: 701px) {
+    .section-nav.project-links ul { columns: 2; }
+  }
+  @media (max-width: 700px) {
+    body { padding: 12px; }
+    .header-meta, th, td { overflow-wrap: anywhere; }
+    .section-nav ul { columns: 1; }
+  }
+  footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 0.9em; color: #666; text-align: center; }
+</style>
+</head>
+<body>
+
+<h1>Informe Proyecto Final ConectaResto</h1>
+
+<div class="header-meta">
+  <p><strong>Proyecto:</strong> ConectaResto-MVP</p>
+  <p><strong>Documento:</strong> Informe_Proyecto_Final_ConectaResto.html</p>
+  <p><strong>Repositorios del proyecto:</strong> <a href="https://github.com/ConectaResto/ConectaResto-MVP/blob/main/README.md">Backend Flask</a> · <a href="https://github.com/ConectaResto/ConectaResto-MVP-Frontend/blob/main/README.md">Frontend SPA</a></p>
+</div>
+
+<div class="evidence">
+  <p><strong>Equipo de desarrollo:</strong></p>
+  <ul>
+    <li><strong>Enriqu Alfonso — Backend:</strong> Python, Flask, API REST, modelos, servicios, repositorios, DTO y MySQL.</li>
+    <li><strong>Eric Camacho — Frontend:</strong> HTML5, CSS3, JavaScript Vanilla, Bootstrap, SPA, navegación e integración con la API REST.</li>
+  </ul>
+</div>
+
+<section class="section-nav project-links" aria-labelledby="enlaces-proyecto">
+  <h3 id="enlaces-proyecto">Enlaces del proyecto</h3>
+  <ul>
+    <li><a href="https://drive.google.com/drive/folders/1hJxBNN4lWGE3JznmLeWWi9kvPip2QIJt" target="_blank" rel="noopener noreferrer">Diagramas arquitectónicos — Google Drive</a></li>
+    <li><a href="https://github.com/ConectaResto/ConectaResto-MVP" target="_blank" rel="noopener noreferrer">Repositorio backend — Flask</a></li>
+    <li><a href="https://github.com/ConectaResto/ConectaResto-MVP-Frontend" target="_blank" rel="noopener noreferrer">Repositorio frontend — SPA</a></li>
+  </ul>
+</section>
+
+<div class="section-nav">
+  <h3>Índice</h3>
+  <ul>
+    <li>1. Fase 01 — Gestión comercial y atención inicial</li>
+    <li>2. Fase 02 — Descubrimiento, requisitos y contratación</li>
+    <li>3. Fase 03 — Scrum, arquitectura y diseño</li>
+    <li>4. Fase 04 — Preparación técnica</li>
+    <li>5. Fase 05 — Desarrollo incremental</li>
+  </ul>
+</div>
+
+<!-- ===================================================================== -->
+<!-- FASE 01: Gestión comercial y atención inicial                         -->
+<!-- ===================================================================== -->
+<h2>1. Fase 01 — Gestión comercial y atención inicial</h2>
+
+<div class="evidence">
+  <p><strong>Antecedente:</strong> <code>PLAN_DE_TRABAJO_MVP.md</code>, conservado en el historial Git del backend (revisión <code>7de6694</code>). El alcance vigente se contrasta con los README de ambos repositorios.</p>
+</div>
+
+<p>ConectaResto-MVP es una aplicación académica de gestión de restaurantes para un único establecimiento, con una API REST en Python, Flask y MySQL 8 y una SPA independiente en HTML, CSS, JavaScript vanilla y Bootstrap local. Permite gestionar mesas y productos, recibir pedidos mediante QR, autorizarlos, prepararlos y registrar pagos simulados.</p>
+
+<h3>1.1 Contexto y problema del restaurante</h3>
+<p>El proyecto nace como una aplicación académica independiente. El plan de trabajo histórico definió el alcance para un establecimiento. El restaurante opera con una única sucursal y necesita gestionar mesas, productos, pedidos, cocina y caja mediante una aplicación web.</p>
+
+<h3>1.2 Objetivo y alcance académico</h3>
+<p>El objetivo es desarrollar un MVP de gestión de restaurantes para un único establecimiento, permitiendo a los clientes consultar el menú y realizar pedidos mediante QR, y al personal interno gestionar mesas, pedidos, cocina y caja.</p>
+
+<h3>1.3 Actores y roles</h3>
+<table>
+  <tr><th>Rol</th><th>Responsabilidades principales</th></tr>
+  <tr><td>ADMIN</td><td>Gestionar usuarios, productos, categorías, mesas y sus códigos QR.</td></tr>
+  <tr><td>WAITER (mesero)</td><td>Abrir servicios, crear pedidos, autorizar y enviar a Cocina, entregar y cancelar pedidos pendientes que aún no se hayan enviado.</td></tr>
+  <tr><td>KITCHEN (cocina)</td><td>Ver pedidos en preparación, cambiar estados de preparación.</td></tr>
+  <tr><td>CASHIER (caja)</td><td>Ver pedidos listos para cobrar, registrar pagos simulados, cerrar servicios.</td></tr>
+  <tr><td>Cliente público</td><td>Consultar menú y crear pedidos mediante QR sin autenticación.</td></tr>
+</table>
+
+<h3>1.4 Requisitos funcionales y restricciones</h3>
+<ul>
+  <li>Restaurante único (una sola instancia, sin multisucursal).</li>
+  <li>Separación de conceptos: pedidos, preparación (estado de cocina) y pagos son entidades/estados independientes.</li>
+  <li>Pago simulado; no hay integración con pasarelas de pago reales.</li>
+  <li>Canales de uso: administración, mesero, cocina, caja, menú público.</li>
+</ul>
+
+<h3>1.5 Seguridad, integridad y mantenibilidad</h3>
+<ul>
+  <li>Autenticación basada en sesiones Flask con cookies HttpOnly, SameSite=Lax, expiración de 8 horas.</li>
+  <li>Contraseñas hasheadas con Werkzeug.</li>
+  <li>Protección CSRF global en métodos no seguros.</li>
+  <li>Autorización por rol mediante decoradores <code>login_required</code> y <code>roles_required</code>.</li>
+</ul>
+
+<h3>1.6 Funcionalidades implementadas, pendientes y excluidas</h3>
+<ul>
+  <li><strong>Implementadas:</strong> gestión de mesas, QR, usuarios y catálogo, con desactivación y reactivación de usuarios, categorías y productos. El flujo de pedidos incluye menú público, autorización y envío a Cocina, preparación, entrega, cancelación de pedidos pendientes sin enviar, pago simulado y cierre.</li>
+  <li><strong>Pendientes de verificación:</strong> una nueva demostración funcional sobre esta versión y el escaneo con un teléfono físico, fuera de la configuración local en <code>127.0.0.1</code>.</li>
+  <li><strong>Excluidas del MVP:</strong> multisucursal, reservas, delivery, inventario detallado, facturación electrónica, pasarelas de pago reales, notificaciones push/email, reportes avanzados, roles adicionales.</li>
+</ul>
+
+<!-- ===================================================================== -->
+<!-- FASE 02: Descubrimiento, requisitos y contratación                   -->
+<!-- ===================================================================== -->
+<h2>2. Fase 02 — Descubrimiento, requisitos y contratación</h2>
+
+<div class="evidence">
+  <p><strong>Antecedente:</strong> <code>PLAN_DE_TRABAJO_MVP.md</code> (revisión <code>7de6694</code> del backend), secciones de alcance, roles, reglas de negocio y decisiones pendientes.</p>
+</div>
+
+<h3>2.1 Requisitos funcionales y no funcionales</h3>
+<ul>
+  <li><strong>Funcionales:</strong> gestión de usuarios y roles, CRUD de productos y categorías, gestión de mesas, generación de QR para menú público, creación y autorización de pedidos, flujo de cocina, pagos simulados, cierre de servicio.</li>
+  <li><strong>No funcionales:</strong> autenticación basada en sesiones, autorización por rol, protección CSRF, bloqueo de concurrencia con <code>with_for_update()</code>, transacciones atómicas, precios serializados como cadena para preservar precisión Decimal.</li>
+</ul>
+
+<h3>2.2 Alcance incluido y excluido del MVP</h3>
+<ul>
+  <li><strong>Incluido:</strong> restaurante único, roles ADMIN/WAITER/KITCHEN/CASHIER, cliente público sin autenticación, separación de pedidos/preparación/pagos, canales de uso por rol.</li>
+  <li><strong>Excluido:</strong> multisucursal, reservas, delivery, inventario detallado, facturación electrónica, pasarelas de pago reales, notificaciones push/email, reportes avanzados, roles adicionales.</li>
+</ul>
+
+<h3>2.3 Decisiones pendientes (no asumir como aprobadas)</h3>
+
+<p>El plan histórico dejó abiertas decisiones sobre medios de pago, comprobantes, cancelación y reembolsos, expiración de sesión, URL para el QR y retención de datos. El MVP resolvió la cancelación de pedidos pendientes sin enviar, la sesión de ocho horas y la URL del QR para la demo local.</p>
+<ul>
+  <li>Medios de pago reales, comprobantes y reembolsos quedan fuera de la demostración actual, que usa un pago simulado.</li>
+  <li>El dominio de producción y la política de retención o borrado de pedidos históricos siguen sin definirse en el alcance documentado.</li>
+</ul>
+
+<!-- ===================================================================== -->
+<!-- FASE 03: Scrum, arquitectura y diseño                                 -->
+<!-- ===================================================================== -->
+<h2>3. Fase 03 — Scrum, arquitectura y diseño</h2>
+
+<div class="evidence">
+  <p><strong>Evidencia verificada:</strong> código fuente en <code>app/</code>, contratos en <code>app/catalog/CONTRACT.md</code> y <code>app/pedidos/CONTRACT.md</code>, migraciones <code>001–015</code> en <code>migrations/versions/</code> y código de la SPA en su repositorio.</p>
+</div>
+
+<h3>3.1 Organización del proyecto</h3>
+<p>El proyecto lo desarrollan dos integrantes:</p>
+<ul>
+  <li><strong>Enriqu Alfonso — Backend:</strong> Python, Flask, API REST, modelos, servicios, repositorios, DTO y MySQL.</li>
+  <li><strong>Eric Camacho — Frontend:</strong> HTML5, CSS3, JavaScript Vanilla, Bootstrap, SPA, navegación e integración con la API REST.</li>
+</ul>
+<p>El seguimiento de tareas se realiza mediante Jira. El control de versiones se gestiona con Git y GitHub. La integración de cambios se realiza mediante ramas independientes y Pull Requests sobre la rama <code>main</code>.</p>
+
+<h3>3.2 Arquitectura Flask actual</h3>
+<p>La aplicación sigue el patrón <strong>factory <code>create_app()</code></strong> con instancia <code>db</code> a nivel de módulo y migraciones mediante Flask-Migrate. Flask expone la API REST. El servidor estático del frontend entrega la SPA, que consume la API desde el navegador.</p>
+
+<h4>3.2.1 Factory de la aplicación (<code>app/__init__.py</code>)</h4>
+<ul>
+  <li>Crea la instancia Flask con configuración relativa a la instancia.</li>
+  <li>Carga configuración por entorno (<code>development</code>, <code>testing</code>, <code>production</code>).</li>
+  <li>Inicializa <code>SQLAlchemy</code> y <code>Flask-Migrate</code>.</li>
+  <li>Registra manejadores globales de errores.</li>
+  <li>Registra blueprints: <code>health</code>, <code>auth</code>, <code>mesas</code>, <code>public_mesas</code>, <code>users</code>, <code>categories</code>, <code>products</code>, <code>servicios</code>, <code>pedidos</code>.</li>
+</ul>
+
+<h4>3.2.2 Configuración (<code>app/config.py</code>)</h4>
+<ul>
+  <li><code>SESSION_COOKIE_HTTPONLY = True</code></li>
+  <li><code>SESSION_COOKIE_SAMESITE = "Lax"</code></li>
+  <li><code>SESSION_REFRESH_EACH_REQUEST = False</code></li>
+  <li><code>PERMANENT_SESSION_LIFETIME = timedelta(hours=8)</code></li>
+  <li><code>SECRET_KEY</code> desde variable de entorno.</li>
+  <li><code>SQLALCHEMY_DATABASE_URI</code> desde <code>DATABASE_URL</code>.</li>
+  <li><code>SQLALCHEMY_ENGINE_OPTIONS</code>: <code>pool_pre_ping = True</code>, <code>pool_recycle = 3600</code></li>
+  <li><code>TestingConfig</code>: usa SQLite en memoria por defecto</li>
+  <li><code>ProductionConfig</code>: <code>SESSION_COOKIE_SECURE = True</code> y exige <code>SECRET_KEY</code> segura</li>
+</ul>
+
+<h3>3.3 Arquitectura modular por capas</h3>
+<table>
+  <tr><th>Capa</th><th>Componentes</th><th>Responsabilidad</th></tr>
+  <tr><td>Presentación</td><td>SPA independiente en HTML, CSS y JavaScript vanilla con Bootstrap local</td><td>Interfaz de usuario y consumo de API REST</td></tr>
+  <tr><td>API REST</td><td>Endpoints Flask (auth, users, catalog, mesas, servicios, pedidos)</td><td>Contratos HTTP con métodos, roles y códigos de respuesta</td></tr>
+  <tr><td>Aplicación (Services)</td><td>auth.service, users.service, catalog.service, servicios.service, pedidos.service</td><td>Lógica de negocio por dominio</td></tr>
+  <tr><td>Acceso a datos (Repositorios)</td><td>PedidoRepository, ServicioRepository</td><td>Consultas SQLAlchemy, bloqueo de fila</td></tr>
+  <tr><td>Transferencia (DTO)</td><td>PedidoDTO, ServicioDTO</td><td>Serialización de respuestas JSON</td></tr>
+  <tr><td>Dominio (Modelos y reglas)</td><td>Modelos SQLAlchemy, reglas de negocio, validaciones de dominio</td><td>Entidades, estados, transiciones, restricciones</td></tr>
+  <tr><td>Datos</td><td>MySQL 8, Flask-Migrate (migraciones 001–015)</td><td>Almacenamiento persistente</td></tr>
+</table>
+
+<h3>3.4 Diagramas C4</h3>
+<p>Los SVG se conservan como evidencia de diseño. Algunas etiquetas corresponden a la versión anterior. La descripción vigente de la arquitectura y el despliegue está en 3.2, 3.3 y 4.2, y el flujo actual está en 5.1.</p>
+<table>
+  <tr><th>Diagrama</th><th>Contenido</th></tr>
+  <tr>
+    <td>C4 de Contexto</td>
+    <td>Actores (cliente público, mesero, cocina, caja, administrador) y sistema ConectaResto-MVP</td>
+  </tr>
+  <tr>
+    <td>C4 de Contenedores</td>
+    <td>Navegador, SPA, Flask, MySQL 8, sistema de archivos</td>
+  </tr>
+  <tr>
+    <td>C4 de Componentes</td>
+    <td>Blueprints, repositorios, DTO, modelos, extensiones, configuración</td>
+  </tr>
+</table>
+
+<figure class="diagram-container">
+  <img src="diagramas/01_contexto.svg" alt="C4 — Diagrama de Contexto">
+  <figcaption class="diagram-caption">
+    <div>C4 de Contexto — Actores y sistema</div>
+    <a href="diagramas/01_contexto.svg" target="_blank" rel="noopener" aria-label="Ampliar C4 — Diagrama de Contexto (se abre en otra pestaña)">Ampliar diagrama</a>
+  </figcaption>
+</figure>
+
+<figure class="diagram-container">
+  <img src="diagramas/02_contenedores.svg" alt="C4 — Diagrama de Contenedores">
+  <figcaption class="diagram-caption">
+    <div>C4 de Contenedores — Componentes del sistema</div>
+    <a href="diagramas/02_contenedores.svg" target="_blank" rel="noopener" aria-label="Ampliar C4 — Diagrama de Contenedores (se abre en otra pestaña)">Ampliar diagrama</a>
+  </figcaption>
+</figure>
+
+<figure class="diagram-container">
+  <img src="diagramas/03_componentes.svg" alt="C4 — Diagrama de Componentes">
+  <figcaption class="diagram-caption">
+    <div>C4 de Componentes — Arquitectura de componentes</div>
+    <a href="diagramas/03_componentes.svg" target="_blank" rel="noopener" aria-label="Ampliar C4 — Diagrama de Componentes (se abre en otra pestaña)">Ampliar diagrama</a>
+  </figcaption>
+</figure>
+
+<h3>3.5 Diagramas UML y arquitectura lógica</h3>
+<table>
+  <tr><th>Diagrama</th><th>Contenido</th></tr>
+  <tr>
+    <td>Clases / Entidades del dominio</td>
+    <td>Roles, usuarios, categorías, productos, mesas, servicios, pedidos, detalles de pedido, pagos</td>
+  </tr>
+  <tr>
+    <td>Arquitectura por capas</td>
+    <td>Capas de presentación, API, aplicación, repositorios, DTO, dominio y datos</td>
+  </tr>
+  <tr>
+    <td>Modelo de datos MySQL (ER)</td>
+    <td>Nueve tablas de aplicación y sus relaciones. El SVG resume el esquema y omite algunos campos.</td>
+  </tr>
+  <tr>
+    <td>Despliegue local</td>
+    <td>Vista histórica del despliegue. La configuración vigente de los dos servidores está en 4.2.</td>
+  </tr>
+</table>
+
+<figure class="diagram-container">
+  <img src="diagramas/05_clases.svg" alt="Diagrama de Clases — Entidades del Dominio">
+  <figcaption class="diagram-caption">
+    <div>Diagrama de clases / entidades del dominio</div>
+    <a href="diagramas/05_clases.svg" target="_blank" rel="noopener" aria-label="Ampliar Diagrama de Clases — Entidades del Dominio (se abre en otra pestaña)">Ampliar diagrama</a>
+  </figcaption>
+</figure>
+
+<figure class="diagram-container">
+  <img src="diagramas/04_capas.svg" alt="Arquitectura por Capas">
+  <figcaption class="diagram-caption">
+    <div>Arquitectura modular por capas</div>
+    <a href="diagramas/04_capas.svg" target="_blank" rel="noopener" aria-label="Ampliar Arquitectura por Capas (se abre en otra pestaña)">Ampliar diagrama</a>
+  </figcaption>
+</figure>
+
+<figure class="diagram-container">
+  <img src="diagramas/07_modelo_datos.svg" alt="Modelo de Datos MySQL — ER">
+  <figcaption class="diagram-caption">
+    <div>Modelo lógico y físico de MySQL</div>
+    <a href="diagramas/07_modelo_datos.svg" target="_blank" rel="noopener" aria-label="Ampliar Modelo de Datos MySQL — ER (se abre en otra pestaña)">Ampliar diagrama</a>
+  </figcaption>
+</figure>
+
+<figure class="diagram-container">
+  <img src="diagramas/08_despliegue.svg" alt="Diagrama de Despliegue Local">
+  <figcaption class="diagram-caption">
+    <div>Diagrama de despliegue local</div>
+    <a href="diagramas/08_despliegue.svg" target="_blank" rel="noopener" aria-label="Ampliar Diagrama de Despliegue Local (se abre en otra pestaña)">Ampliar diagrama</a>
+  </figcaption>
+</figure>
+
+<h3>3.6 Decisiones de Arquitectura (ADR)</h3>
+<table>
+  <tr><th>ADR</th><th>Decisión</th><th>Estado</th></tr>
+  <tr><td>ADR-1</td><td>Flask como framework backend.</td><td>Histórico — vigente según código actual</td></tr>
+  <tr><td>ADR-2</td><td>MySQL como base relacional.</td><td>Histórico — vigente según código actual</td></tr>
+  <tr><td>ADR-3</td><td>Arquitectura monolítica modular para la API.</td><td>Vigente en el backend. La SPA se ejecuta por separado.</td></tr>
+  <tr><td>ADR-4</td><td><strong>Decisión vigente:</strong> SPA independiente en HTML, CSS y JavaScript vanilla con Bootstrap local y navegación por hash. Flask expone la API REST. La SPA se sirve desde su propio repositorio.</td><td><strong>Implementación histórica superada:</strong> interfaz integrada en Flask mediante vistas Jinja2 y una copia de la SPA servida desde <code>/app/</code>.</td></tr>
+  <tr><td>ADR-5</td><td>Ejecución local sin despliegue en producción.</td><td>Histórico — vigente según alcance del MVP</td></tr>
+</table>
+
+<h3>3.7 Atributos de calidad</h3>
+<ul>
+  <li><strong>Seguridad:</strong> autenticación por sesión, contraseñas hasheadas, CSRF, autorización por rol, cookies HttpOnly/SameSite=Lax.</li>
+  <li><strong>Integridad de datos:</strong> restricciones CHECK, índices únicos, bloqueo de fila con <code>with_for_update()</code>, transacciones atómicas.</li>
+  <li><strong>Mantenibilidad:</strong> arquitectura modular por capas, contratos de API documentados, modelos ORM con clase base abstracta.</li>
+  <li><strong>Rendimiento:</strong> pool de conexiones con <code>pool_pre_ping</code> y <code>pool_recycle</code>, precios serializados como cadena para preservar precisión Decimal.</li>
+  <li><strong>Disponibilidad:</strong> health check <code>GET /health</code>, sesiones con expiración absoluta de 8 horas.</li>
+  <li><strong>Escalabilidad:</strong> arquitectura monolítica modular diseñada para un único restaurante; no hay multisucursal.</li>
+  <li><strong>Costos de operación:</strong> despliegue local sin infraestructura de producción; base de datos MySQL 8 local.</li>
+  <li><strong>Riesgos potenciales:</strong> Sin mediciones de carga en este informe. La prueba de cotejamiento de MySQL 8 se omite cuando la suite usa SQLite.</li>
+</ul>
+
+<!-- ===================================================================== -->
+<!-- FASE 04: Preparación técnica                                          -->
+<!-- ===================================================================== -->
+<h2>4. Fase 04 — Preparación técnica</h2>
+
+<div class="evidence">
+  <p><strong>Evidencia verificada:</strong> <code>requirements.txt</code>, código fuente en <code>app/</code>.</p>
+</div>
+
+<h3>4.1 Stack tecnológico</h3>
+<table>
+  <tr><th>Componente</th><th>Tecnología</th><th>Versión mínima</th></tr>
+  <tr><td>Backend</td><td>Flask (Python)</td><td>&gt;=3.0.0</td></tr>
+  <tr><td>Lenguaje backend</td><td>Python</td><td>—</td></tr>
+  <tr><td>Frontend</td><td>HTML, CSS, JavaScript vanilla y Bootstrap local</td><td>Bootstrap 5.3.2 incluido</td></tr>
+  <tr><td>Base de datos</td><td>MySQL 8</td><td>—</td></tr>
+  <tr><td>ORM / migraciones</td><td>Flask-SQLAlchemy, Flask-Migrate</td><td>&gt;=3.0.0 / &gt;=4.0.0</td></tr>
+  <tr><td>Pruebas</td><td>Pytest</td><td>&gt;=8.0.0</td></tr>
+  <tr><td>Driver MySQL</td><td>PyMySQL</td><td>&gt;=1.1.0</td></tr>
+  <tr><td>Variables de entorno</td><td>python-dotenv</td><td>&gt;=1.0.0</td></tr>
+  <tr><td>Generación QR</td><td>segno</td><td>&gt;=1.4.0</td></tr>
+</table>
+
+<h3>4.2 Entorno y variables de entorno</h3>
+
+<p>Para la demostración local, la API Flask escucha en <code>http://127.0.0.1:5000</code>. Desde la raíz del repositorio frontend, <code>python -m http.server 8000 --bind 127.0.0.1</code> sirve la SPA en <code>http://127.0.0.1:8000</code>. El cliente <code>js/api.js</code> usa <code>API_ORIGIN</code> con la dirección de Flask.</p>
+<table>
+  <tr><th>Variable del backend</th><th>Uso</th></tr>
+  <tr><td><code>DATABASE_URL</code></td><td>URL de conexión de SQLAlchemy a MySQL. Los valores se definen en la instalación local.</td></tr>
+  <tr><td><code>SECRET_KEY</code></td><td>Firma las cookies de sesión Flask. Se configura con una clave privada.</td></tr>
+  <tr><td><code>PUBLIC_BASE_URL</code></td><td>Base de la SPA para los enlaces públicos. En la demo apunta a <code>http://127.0.0.1:8000</code>.</td></tr>
+</table>
+<p>En desarrollo, Flask permite CORS con credenciales para el origen exacto <code>http://127.0.0.1:8000</code>. La SPA usa <code>credentials: 'include'</code> para las solicitudes a la API y añade el token CSRF en las operaciones de escritura. <code>.env.example</code> sirve como plantilla. El archivo local <code>.env</code> se mantiene fuera del repositorio.</p>
+
+<h3>4.3 Factory y configuración</h3>
+<p>La factory <code>create_app()</code> en <code>app/__init__.py</code> crea la instancia Flask, carga la configuración por entorno, inicializa SQLAlchemy y Flask-Migrate, registra manejadores globales de errores y registra los blueprints de la API y aplica la protección CSRF con <code>before_request</code>.</p>
+
+<h3>4.4 Pruebas con Pytest</h3>
+<p>La suite se puede ejecutar con <code>python -m pytest -q</code> y <code>TEST_DATABASE_URL=sqlite:///:memory:</code> para aislarla de MySQL. Los resultados históricos se identifican en 5.9.</p>
+
+<!-- ===================================================================== -->
+<!-- FASE 05: Desarrollo incremental                                       -->
+<!-- ===================================================================== -->
+<h2>5. Fase 05 — Desarrollo incremental</h2>
+
+<div class="evidence">
+  <p><strong>Evidencia vigente:</strong> README de ambos repositorios, rutas y servicios de Flask y vistas en <code>js/views/</code> de la SPA. <strong>Antecedentes:</strong> <code>docs/ESTADO_CIERRE_MVP.md</code>, <code>docs/QR_PUBLICO.md</code> y <code>docs/E3_MENU_PUBLICO.md</code>, consultables en la revisión histórica <code>7de6694</code> del backend.</p>
+</div>
+
+<h3>5.1 Flujo completo de funcionamiento</h3>
+
+<ol>
+  <li><strong>Administración genera el QR:</strong> ADMIN solicita <code>GET /admin/mesas/&lt;id&gt;/qr.svg</code>. Flask genera el SVG con <code>segno</code>. El enlace abre <code>/?token=&lt;token&gt;#public</code> en la SPA. La generación usa el origen local permitido si coincide con el de la solicitud, o <code>PUBLIC_BASE_URL</code> en los demás casos. Los enlaces antiguos <code>GET /public/mesas/&lt;token&gt;/menu</code> redirigen con HTTP 302 a la SPA si el token es válido y devuelven 404 si es inválido.</li>
+  <li><strong>El cliente consulta el menú y confirma el pedido:</strong> La SPA lee el token con <code>URLSearchParams</code>, consulta la mesa con <code>GET /public/mesas/&lt;token&gt;</code> y carga el catálogo. Envía <code>POST /public/mesas/&lt;token&gt;/pedidos</code> con CSRF y sin inicio de sesión. El backend reutiliza un servicio ACTIVO o abre uno para una mesa DISPONIBLE. Una mesa CERRADA rechaza pedidos.</li>
+  <li><strong>Mesero autoriza y envía a Cocina:</strong> La SPA usa <code>POST /pedidos/&lt;id&gt;/autorizar-y-enviar-cocina</code>. La operación registra la autorización cuando falta, conserva la existente y deja el pedido en EN_PREPARACION con preparación RECIBIDO en una sola transacción.</li>
+  <li><strong>Cocina prepara:</strong> KITCHEN usa <code>PATCH /pedidos/&lt;id&gt;/preparacion</code> para pasar de RECIBIDO a EN_COCINA y luego a LISTO_PARA_SERVIR. La última transición deja el pedido en LISTO.</li>
+  <li><strong>Mesero entrega:</strong> WAITER registra la entrega con <code>POST /pedidos/&lt;id&gt;/entregar</code>. El pedido pasa a ENTREGADO.</li>
+  <li><strong>Caja registra el pago y cierra:</strong> CASHIER usa <code>POST /servicios/&lt;id&gt;/pago-simulado</code> si el total cobrable es positivo y <code>POST /servicios/&lt;id&gt;/cerrar</code> para cerrar el servicio y devolver la mesa a DISPONIBLE.</li>
+</ol>
+<p>Flask sirve las fotografías de productos mediante <code>GET /products/&lt;id&gt;/image</code> desde <code>instance/uploads/products/</code>. Para productos sin fotografía, la SPA sirve <code>img/default-product.svg</code> desde su propio origen.</p>
+
+<h3>5.2 Reglas de negocio clave</h3>
+<ul>
+  <li>Un pedido acepta productos activos y disponibles de categorías activas.</li>
+  <li>El precio de una línea de pedido se captura al momento de crear el pedido (precio unitario del producto en ese instante).</li>
+  <li>Un pedido solo puede pasar a "en preparación" si tiene al menos una línea de producto.</li>
+  <li>Solo KITCHEN puede cambiar el estado de preparación.</li>
+  <li>Solo WAITER puede cancelar un pedido PENDIENTE con preparación NO_ENVIADO, con o sin autorización previa, mientras el servicio esté ACTIVO y no tenga pago registrado. El pedido queda CANCELADO y conserva sus líneas, precios y autorización, si existía. Cocina no recibe pedidos cancelados.</li>
+  <li>Solo CASHIER puede registrar pagos o cerrar servicios. Si hay pedidos pendientes, en preparación o listos, Caja bloquea ambas operaciones. El cobro suma solo ENTREGADOS. Un servicio vacío o con todos los pedidos cancelados puede cerrarse sin pago. Si el total cobrable es positivo, el cierre exige el pago completo.</li>
+  <li>Solo ADMIN puede crear, editar y desactivar usuarios y productos.</li>
+  <li>Un cliente público no necesita autenticación para ver el menú ni crear un pedido por QR.</li>
+  <li>El pago es simulado; no hay integración con pasarelas de pago reales.</li>
+</ul>
+
+<h3>5.3 Bloqueo de concurrencia</h3>
+<p>Las operaciones de pedido y caja coordinan el acceso con actualizaciones de bloqueo y lecturas <code>with_for_update()</code> en MySQL. <code>bloquear_servicio()</code> adquiere primero el bloqueo de mesa y luego el de servicio. Caja, cancelación y autorización con envío consultan el pago antes de bloquear pedidos. Cada operación confirma la transacción al finalizar o la revierte si falla.</p>
+
+<h3>5.4 Modelo de datos MySQL — Tablas y relaciones</h3>
+<div class="evidence">
+  <p><strong>Evidencia verificada:</strong> modelos de <code>app/catalog/</code>, <code>app/users/</code>, <code>app/mesas/</code>, <code>app/servicios/</code> y <code>app/pedidos/</code>, y migraciones <code>001–015</code> (HEAD: <code>015_add_cancelado_to_pedidos</code>), <code>app/catalog/CONTRACT.md</code> §Modelo.</p>
+</div>
+
+<p>El esquema físico de MySQL se gestiona mediante 15 migraciones versionadas de Flask-Migrate. La revisión 015 incorpora CANCELADO a la restricción <code>ck_pedidos_estado</code>. Los modelos de las nueve tablas de aplicación heredan de <code>BaseModel</code> con columnas <code>id</code> (PK), <code>created_at</code> y <code>updated_at</code>.</p>
+
+<table>
+  <tr><th>Tabla</th><th>Columnas principales</th><th>Relaciones / restricciones</th></tr>
+  <tr><td><code>roles</code></td><td><code>id</code>, <code>name</code> (unique), <code>description</code></td><td>Roles: ADMIN, WAITER, KITCHEN, CASHIER.</td></tr>
+  <tr><td><code>usuarios</code></td><td><code>id</code>, <code>username</code> (unique), <code>email</code> (unique), <code>password_hash</code>, <code>rol_id</code> FK, <code>is_active</code></td><td>FK a <code>roles.id</code>. Un usuario tiene un rol.</td></tr>
+  <tr><td><code>categories</code></td><td><code>id</code>, <code>name</code> (unique, collation utf8mb4_0900_ai_ci), <code>description</code>, <code>is_active</code></td><td>Nombre único sin distinguir mayúsculas/acentos.</td></tr>
+  <tr><td><code>products</code></td><td><code>id</code>, <code>name</code>, <code>description</code>, <code>price</code> NUMERIC(10,2), <code>categoria_id</code> FK, <code>is_active</code>, <code>is_available</code>, <code>image_filename</code></td><td>FK a <code>categories.id</code>. El servicio de catálogo valida la unicidad del nombre por categoría. Precio Decimal serializado como cadena.</td></tr>
+  <tr><td><code>mesas</code></td><td><code>id</code>, <code>numero</code> (unique, &gt;0), <code>estado</code> (DISPONIBLE/OCUPADA/CERRADA), <code>public_token</code> (unique, 64 hex)</td><td>Token público estable entre servicios para menú QR.</td></tr>
+  <tr><td><code>servicios</code></td><td><code>id</code>, <code>mesa_id</code> FK, <code>abierto_por_id</code> FK nullable, <code>estado</code> (ACTIVO/CERRADO)</td><td>FK a <code>mesas.id</code> y <code>usuarios.id</code>. La migración 008 declara <code>estado_activo</code> como columna generada virtual y <code>uq_servicios_una_activa_por_mesa</code> como restricción única sobre <code>(mesa_id, estado_activo)</code>. El modelo ORM <code>Servicio</code> no declara ninguno de esos dos elementos. En la capa de aplicación, <code>_crear_servicio_para_mesa()</code> cambia la mesa a OCUPADA mediante una actualización condicional que exige que esté DISPONIBLE. Después comprueba si existe un servicio ACTIVO para esa mesa y solo crea uno cuando no existe.</td></tr>
+  <tr><td><code>pedidos</code></td><td><code>id</code>, <code>servicio_id</code> FK, <code>origen</code> (MESERO/PUBLICO), <code>creado_por_id</code> FK nullable, <code>autorizado_por_id</code> FK nullable, <code>autorizado_at</code> nullable, <code>estado</code>, <code>estado_preparacion</code></td><td>FK a <code>servicios.id</code> y <code>usuarios.id</code>. Check constraints en estados y origen.</td></tr>
+  <tr><td><code>detalles_pedido</code></td><td><code>id</code>, <code>pedido_id</code> FK, <code>producto_id</code> FK, <code>cantidad</code>, <code>precio_unitario</code> NUMERIC(10,2)</td><td>FK a <code>pedidos.id</code> y <code>products.id</code>. Precio capturado al crear el pedido.</td></tr>
+  <tr><td><code>pagos</code></td><td><code>id</code>, <code>servicio_id</code> (unique) FK, <code>registrado_por_id</code> FK, <code>importe</code> NUMERIC(10,2) (&gt;0), <code>fecha_registro</code></td><td>FK a <code>servicios.id</code> y <code>usuarios.id</code>. Un pago por servicio.</td></tr>
+</table>
+
+<h3>5.5 Estados de pedido y preparación</h3>
+<table>
+  <tr><th>Acción</th><th>Estado del pedido</th><th>Estado de preparación</th><th>Rol</th></tr>
+  <tr><td>Crear</td><td>PENDIENTE</td><td>NO_ENVIADO</td><td>WAITER / Público</td></tr>
+  <tr><td>Autorizar</td><td>PENDIENTE</td><td>NO_ENVIADO</td><td>WAITER</td></tr>
+  <tr><td>Autorizar y enviar a Cocina, o enviar un pedido ya autorizado</td><td>EN_PREPARACION</td><td>RECIBIDO</td><td>WAITER</td></tr>
+  <tr><td>Cocina comienza</td><td>EN_PREPARACION</td><td>EN_COCINA</td><td>KITCHEN</td></tr>
+  <tr><td>Cocina termina</td><td>LISTO</td><td>LISTO_PARA_SERVIR</td><td>KITCHEN</td></tr>
+  <tr><td>Mesero entrega</td><td>ENTREGADO</td><td>LISTO_PARA_SERVIR</td><td>WAITER</td></tr>
+  <tr><td>Cancelar pedido PENDIENTE sin enviar</td><td>CANCELADO (terminal)</td><td>NO_ENVIADO</td><td>WAITER</td></tr>
+</table>
+
+<h3>5.6 Endpoints REST existentes</h3>
+<div class="evidence">
+  <p><strong>Evidencia verificada:</strong> <code>app/pedidos/CONTRACT.md</code>, <code>app/catalog/CONTRACT.md</code>, rutas registradas por Flask en <code>app/</code>.</p>
+</div>
+
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Rol</th><th>Descripción</th></tr>
+  <tr><td>GET</td><td><code>/health</code></td><td>Público</td><td>Health check (HTTP 200).</td></tr>
+  <tr><td>GET</td><td><code>/auth/csrf</code></td><td>Público</td><td>Obtiene token CSRF.</td></tr>
+  <tr><td>POST</td><td><code>/auth/login</code></td><td>Público</td><td>Inicia sesión (username/password).</td></tr>
+  <tr><td>POST</td><td><code>/auth/logout</code></td><td>Con CSRF de sesión</td><td>Limpia la sesión. La ruta carece de un requisito de rol o autenticación.</td></tr>
+  <tr><td>GET</td><td><code>/auth/me</code></td><td>Autenticado</td><td>Usuario actual.</td></tr>
+  <tr><td>GET</td><td><code>/users</code></td><td>ADMIN</td><td>Lista usuarios.</td></tr>
+  <tr><td>GET</td><td><code>/users/&lt;id&gt;</code></td><td>ADMIN</td><td>Consulta usuario.</td></tr>
+  <tr><td>POST</td><td><code>/users</code></td><td>ADMIN</td><td>Crea usuario.</td></tr>
+  <tr><td>PATCH</td><td><code>/users/&lt;id&gt;</code></td><td>ADMIN</td><td>Actualiza/reactiva usuario.</td></tr>
+  <tr><td>DELETE</td><td><code>/users/&lt;id&gt;</code></td><td>ADMIN</td><td>Desactiva usuario lógicamente.</td></tr>
+  <tr><td>GET</td><td><code>/categories</code></td><td>Público</td><td>Lista categorías activas. Incluir inactivas requiere ADMIN.</td></tr>
+  <tr><td>POST</td><td><code>/categories</code></td><td>ADMIN</td><td>Crea categoría.</td></tr>
+  <tr><td>GET</td><td><code>/categories/&lt;id&gt;</code></td><td>Público</td><td>Consulta categoría activa.</td></tr>
+  <tr><td>PATCH</td><td><code>/categories/&lt;id&gt;</code></td><td>ADMIN</td><td>Actualiza/reactiva categoría.</td></tr>
+  <tr><td>DELETE</td><td><code>/categories/&lt;id&gt;</code></td><td>ADMIN</td><td>Desactiva categoría lógicamente.</td></tr>
+  <tr><td>GET</td><td><code>/products</code></td><td>Público</td><td>Lista productos disponibles (filtro ?categoria_id).</td></tr>
+  <tr><td>GET</td><td><code>/admin/products</code></td><td>ADMIN</td><td>Lista productos, incluidos no disponibles. Permite incluir inactivos con <code>include_inactive=true</code>.</td></tr>
+  <tr><td>POST</td><td><code>/products</code></td><td>ADMIN</td><td>Crea producto.</td></tr>
+  <tr><td>GET</td><td><code>/products/&lt;id&gt;</code></td><td>Público</td><td>Consulta producto disponible.</td></tr>
+  <tr><td>PATCH</td><td><code>/products/&lt;id&gt;</code></td><td>ADMIN</td><td>Actualiza producto.</td></tr>
+  <tr><td>DELETE</td><td><code>/products/&lt;id&gt;</code></td><td>ADMIN</td><td>Desactiva producto lógicamente.</td></tr>
+  <tr><td>PUT/DELETE</td><td><code>/products/&lt;id&gt;/image</code></td><td>ADMIN</td><td>Sube/elimina imagen de producto.</td></tr>
+  <tr><td>GET</td><td><code>/products/&lt;id&gt;/image</code></td><td>Público</td><td>Sirve la fotografía de un producto activo y disponible de una categoría activa.</td></tr>
+  <tr><td>GET</td><td><code>/mesas</code></td><td>WAITER</td><td>Lista mesas con filtros.</td></tr>
+  <tr><td>GET</td><td><code>/admin/mesas</code></td><td>ADMIN</td><td>Lista mesas con token público.</td></tr>
+  <tr><td>POST</td><td><code>/admin/mesas</code></td><td>ADMIN</td><td>Crea mesa.</td></tr>
+  <tr><td>GET/PATCH</td><td><code>/admin/mesas/&lt;id&gt;</code></td><td>ADMIN</td><td>Consulta/actualiza mesa.</td></tr>
+  <tr><td>GET</td><td><code>/admin/mesas/&lt;id&gt;/qr.svg</code></td><td>ADMIN</td><td>Genera QR SVG de la mesa.</td></tr>
+  <tr><td>GET</td><td><code>/public/mesas/&lt;token&gt;</code></td><td>Público</td><td>JSON con número y enlaces al menú.</td></tr>
+  <tr><td>GET</td><td><code>/public/mesas/&lt;token&gt;/menu</code></td><td>Público</td><td>Redirige a la SPA (302 con token válido y URL configurada, 404 con token inválido).</td></tr>
+  <tr><td>POST</td><td><code>/public/mesas/&lt;token&gt;/pedidos</code></td><td>Público + CSRF</td><td>Crea pedido público (apertura automática si es necesario).</td></tr>
+  <tr><td>POST</td><td><code>/servicios</code></td><td>WAITER</td><td>Abre servicio para una mesa.</td></tr>
+  <tr><td>GET</td><td><code>/servicios</code></td><td>WAITER, CASHIER</td><td>Lista servicios (filtro ?estado=ACTIVO/CERRADO).</td></tr>
+  <tr><td>GET</td><td><code>/servicios/&lt;id&gt;</code></td><td>WAITER, CASHIER</td><td>Consulta servicio con pedidos, total sin cancelados y pago.</td></tr>
+  <tr><td>POST</td><td><code>/servicios/&lt;id&gt;/pago-simulado</code></td><td>CASHIER</td><td>Registra el pago simulado por pedidos entregados si el total es positivo y todos los pedidos están entregados o cancelados.</td></tr>
+  <tr><td>POST</td><td><code>/servicios/&lt;id&gt;/cerrar</code></td><td>CASHIER</td><td>Cierra el servicio cuando se cumplen las reglas de Caja y libera la mesa.</td></tr>
+  <tr><td>POST</td><td><code>/servicios/&lt;id&gt;/pedidos</code></td><td>WAITER</td><td>Crea pedido interno.</td></tr>
+  <tr><td>GET</td><td><code>/pedidos</code></td><td>WAITER, KITCHEN</td><td>Lista pedidos con filtro <code>estado</code>. La vista de Cocina excluye pedidos sin enviar y cancelados.</td></tr>
+  <tr><td>GET</td><td><code>/pedidos/&lt;id&gt;</code></td><td>WAITER, KITCHEN</td><td>Consulta pedido con detalles y precios históricos.</td></tr>
+  <tr><td>POST</td><td><code>/pedidos/&lt;id&gt;/autorizar</code></td><td>WAITER</td><td>Autoriza pedido pendiente.</td></tr>
+  <tr><td>POST</td><td><code>/pedidos/&lt;id&gt;/enviar-cocina</code></td><td>WAITER</td><td>Envía a cocina (estado EN_PREPARACION).</td></tr>
+  <tr><td>POST</td><td><code>/pedidos/&lt;id&gt;/autorizar-y-enviar-cocina</code></td><td>WAITER</td><td>Autoriza y envía un pedido pendiente sin enviar en una transacción. Conserva la autorización previa.</td></tr>
+  <tr><td>POST</td><td><code>/pedidos/&lt;id&gt;/cancelar</code></td><td>WAITER</td><td>Cancela un pedido pendiente sin enviar, en un servicio activo sin pago.</td></tr>
+  <tr><td>PATCH</td><td><code>/pedidos/&lt;id&gt;/preparacion</code></td><td>KITCHEN</td><td>Actualiza estado de preparación.</td></tr>
+  <tr><td>POST</td><td><code>/pedidos/&lt;id&gt;/entregar</code></td><td>WAITER</td><td>Marca pedido como entregado.</td></tr>
+</table>
+
+<p>Las mutaciones requieren CSRF. Los endpoints de autorización y envío individuales se mantienen en la API. La SPA ejecuta la acción combinada.</p>
+
+<p class="code">Formato habitual de respuesta JSON: <code>{"success": true, "data": ..., "message": ...}</code> para éxito; <code>{"success": false, "error": ..., "errors": ...}</code> para error. Los importes se serializan como cadenas para preservar la precisión Decimal. <code>/health</code> usa un JSON propio, las imágenes se sirven como archivos y el enlace de menú anterior responde con redirección.</p>
+
+<h3>5.7 Autenticación, autorización y CSRF</h3>
+<div class="evidence">
+  <p><strong>Evidencia verificada:</strong> <code>app/auth/routes.py</code>, <code>app/auth/service.py</code>, <code>app/auth/decorators.py</code>, <code>app/auth/csrf.py</code>, <code>app/config.py</code>, <code>app/users/models.py</code>.</p>
+</div>
+
+<h4>5.7.1 Autenticación</h4>
+<ul>
+  <li>Login mediante <code>POST /auth/login</code> con <code>username</code> y <code>password</code>.</li>
+  <li>Contraseñas hasheadas con Werkzeug (<code>generate_password_hash</code> / <code>check_password_hash</code>).</li>
+  <li>Sesión basada en cookies Flask con <code>session["user_id"]</code> y <code>session["authenticated_at"]</code>.</li>
+  <li>Cookie de sesión: HttpOnly, SameSite=Lax, expiración absoluta de 8 horas (<code>PERMANENT_SESSION_LIFETIME</code>).</li>
+  <li><code>SESSION_REFRESH_EACH_REQUEST = False</code> (la sesión no se renueva en cada petición).</li>
+</ul>
+
+<h4>5.7.2 Autorización por rol</h4>
+<ul>
+  <li>Decorador <code>login_required</code>: devuelve 401 si no hay sesión.</li>
+  <li>Decorador <code>roles_required(*roles)</code>: combina <code>login_required</code> y verifica que el rol del usuario esté en la lista permitida (403 si no coincide).</li>
+  <li>ADMIN no hereda acceso automático a KITCHEN/CASHIER; los permisos son explícitos por endpoint.</li>
+  <li>El cierre de servicio corresponde a CASHIER; WAITER no realiza cierre de caja.</li>
+</ul>
+
+<h4>5.7.3 Protección CSRF</h4>
+<ul>
+  <li>Token CSRF generado por sesión (<code>secrets.token_hex(32)</code>) y obtenido mediante <code>GET /auth/csrf</code>.</li>
+  <li>Middleware <code>protect_csrf</code> aplicado en <code>before_request</code>; exige encabezado <code>X-CSRF-Token</code> en métodos no seguros (POST, PATCH, PUT, DELETE).</li>
+  <li>Lista de exenciones CSRF vacía (<code>CSRF_EXEMPT_ENDPOINTS = frozenset()</code>): ninguna ruta está exenta.</li>
+  <li>Comparación constante con <code>hmac.compare_digest</code>.</li>
+</ul>
+
+<h3>5.8 Diagrama de secuencia — Flujo completo</h3>
+<figure class="diagram-container">
+  <img src="diagramas/06_secuencia.svg" alt="Diagrama de Secuencia — Pedido QR hasta Cierre">
+  <figcaption class="diagram-caption">
+    <div>Secuencia vigente del MVP para pedidos por QR. El flujo vigente usa la API JSON y la acción combinada descritas en 5.1.</div>
+    <a href="diagramas/06_secuencia.svg" target="_blank" rel="noopener" aria-label="Ampliar Diagrama de Secuencia — Pedido QR hasta Cierre (se abre en otra pestaña)">Ampliar diagrama</a>
+  </figcaption>
+</figure>
+
+<h3>5.9 Resultados históricos de pruebas</h3>
+<p>Estas evidencias corresponden a versiones anteriores del proyecto. La actualización de este informe verifica el código, los enlaces y la visualización de los SVG.</p>
+<table>
+  <tr><th>Ejecución</th><th>Resultado</th><th>Entorno</th><th>Tipo de prueba</th></tr>
+  <tr><td>Suite completa pytest previa a la entrega F</td><td>692 aprobadas, 0 fallidas, 1 omitida</td><td>SQLite</td><td>pytest (automatizada)</td></tr>
+  <tr><td>Esquema MySQL 8.0.46 y 14 migraciones</td><td>Verificadas por separado</td><td>MySQL 8.0.46</td><td>API (automatizada)</td></tr>
+  <tr><td>Cuatro paneles Chrome con sesiones independientes (ADMIN, WAITER, KITCHEN, CASHIER)</td><td>APROBADOS (abertura QR en SPA, menú visible)</td><td>Chrome + MySQL 8.0.46</td><td>Visual (manual)</td></tr>
+  <tr><td>Flujo completo QR → pedido → mesero → cocina → caja → cierre</td><td>APROBADO mediante API</td><td>MySQL 8.0.46 + API REST</td><td>API (automatizada)</td></tr>
+  <tr><td>Completar pedido mediante botones de la SPA</td><td>APROBADO (confirmación manual del usuario)</td><td>Chrome + SPA</td><td>Visual (manual)</td></tr>
+  <tr><td>Corrección histórica de login</td><td>PR #56 integrado en el backend (revisión <code>1c962f3</code>)</td><td>Historial Git</td><td>Evidencia de integración</td></tr>
+</table>
+
+<p><strong>Procedencia.</strong> El resultado de 692 pruebas aprobadas corresponde a la ejecución histórica con SQLite registrada en <code>docs/ESTADO_CIERRE_MVP.md</code> (revisión <code>7de6694</code>). El recorrido MySQL/Chrome y el esquema previo a la migración 015 corresponden a validaciones separadas. Las filas visuales identifican la evidencia en navegador registrada en la versión anterior del informe. Esta actualización no repitió la suite ni ejecutó migraciones.</p>
+
+<!-- ===================================================================== -->
+<!-- PIE DE PÁGINA                                                         -->
+<!-- ===================================================================== -->
+<footer>
+  <p><strong>ConectaResto-MVP</strong> — Informe académico final del MVP de gestión de restaurantes.</p>
+  <p><strong>Equipo:</strong> Enriqu Alfonso (Backend) y Eric Camacho (Frontend).</p>
+  <p><strong>Entrega:</strong> Únicamente el HTML y sus ocho diagramas SVG asociados. No se entregan documentos Word.</p>
+</footer>
+
+</body>
+</html>

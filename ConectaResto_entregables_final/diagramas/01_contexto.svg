@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1140" height="410" viewBox="0 0 1140 410" role="img" aria-labelledby="title desc">
+  <title id="title">C4 — Diagrama de Contexto</title>
+  <desc id="desc">Roles que interactúan con ConectaResto-MVP.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+      <path d="M 0 0 L 8 4 L 0 8 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <style>text { font-family: Arial, sans-serif; fill: #1e293b; }</style>
+  <text x="570" y="37" text-anchor="middle" font-size="24" font-weight="700">C4 — Diagrama de Contexto</text>
+  <g>
+  <rect x="20" y="77" width="208" height="126" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+  <text x="124" y="107" text-anchor="middle" font-size="17" font-weight="700">Cliente público</text>
+  <text x="124" y="132" text-anchor="middle" font-size="16">Sin autenticación</text>
+  <text x="124" y="158" text-anchor="middle" font-size="16"><tspan x="124" dy="0">Escanea QR,</tspan> <tspan x="124" dy="22">consulta menú, pide</tspan></text>
+  </g>
+  <path d="M 124 203 V 269" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <g>
+  <rect x="243" y="77" width="208" height="126" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+  <text x="347" y="107" text-anchor="middle" font-size="17" font-weight="700">Mesero (WAITER)</text>
+  <text x="347" y="149" text-anchor="middle" font-size="16">Gestiona pedidos, mesas</text>
+  </g>
+  <path d="M 347 203 V 269" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <g>
+  <rect x="466" y="77" width="208" height="126" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+  <text x="570" y="107" text-anchor="middle" font-size="17" font-weight="700">Cocina (KITCHEN)</text>
+  <text x="570" y="149" text-anchor="middle" font-size="16">Prepara pedidos</text>
+  </g>
+  <path d="M 570 203 V 269" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <g>
+  <rect x="689" y="77" width="208" height="126" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+  <text x="793" y="107" text-anchor="middle" font-size="17" font-weight="700">Caja (CASHIER)</text>
+  <text x="793" y="149" text-anchor="middle" font-size="16">Registra pagos, cierra caja</text>
+  </g>
+  <path d="M 793 203 V 269" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <g>
+  <rect x="912" y="77" width="208" height="126" rx="8" fill="#e3f2fd" stroke="#2196f3" stroke-width="1.6"/>
+  <text x="1016" y="107" text-anchor="middle" font-size="17" font-weight="700">Administrador (ADMIN)</text>
+  <text x="1016" y="149" text-anchor="middle" font-size="16"><tspan x="1016" dy="0">Gestiona usuarios,</tspan> <tspan x="1016" dy="22">productos, mesas</tspan></text>
+  </g>
+  <path d="M 1016 203 V 269" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <g>
+  <rect x="44" y="269" width="1052" height="116" rx="8" fill="#fff3e0" stroke="#ff9800" stroke-width="1.6"/>
+  <text x="570" y="298" text-anchor="middle" font-size="22" font-weight="700">ConectaResto-MVP</text>
+  <text x="570" y="320" text-anchor="middle" font-size="16">Flask + MySQL 8 — Restaurante único</text>
+  <text x="570" y="342" text-anchor="middle" font-size="16">API REST, autenticación, CSRF, menú público, QR</text>
+  <text x="570" y="364" text-anchor="middle" font-size="16">Pedidos, cocina, caja, pagos simulados</text>
+  </g>
+</svg>
